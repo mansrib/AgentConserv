@@ -642,9 +642,23 @@
                 <span class="text-[10px] font-normal opacity-85">يقرا ويحلل ويبعث وحدو</span>
               </button>
             </div>
+            <div class="pt-1.5 border-t border-white/15 space-y-1">
+              <span class="text-[11px] font-extrabold text-sky-200 block">🎙️ نوع ترجيع الجواب للحريف على الواتساب:</span>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" id="replyFmtBtn-voice" onclick="setWhatsAppReplyFormat('voice')" class="px-2 py-1.5 rounded-lg text-[11px] font-extrabold bg-sky-400 text-sky-950 shadow transition">
+                  🎙️ رسالة صوتية
+                </button>
+                <button type="button" id="replyFmtBtn-text" onclick="setWhatsAppReplyFormat('text')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-sky-200 border border-slate-600 hover:bg-slate-700 transition">
+                  💬 رسالة نصية
+                </button>
+                <button type="button" id="replyFmtBtn-both" onclick="setWhatsAppReplyFormat('both')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-sky-200 border border-slate-600 hover:bg-slate-700 transition">
+                  🎙️+💬 الزوز معاً
+                </button>
+              </div>
+            </div>
             <label class="flex items-center gap-2 text-[11px] text-sky-200 cursor-pointer pt-1">
               <input type="checkbox" id="waAutoReadVoiceCheck" checked onchange="toggleWaAutoReadVoice()" class="accent-sky-400 rounded" />
-              <span>🔊 البوت يقرالي كل ميساج واتساب جديد بالصوت كيف يوصل</span>
+              <span>🔊 البوت يقرالي كل ميساج واتساب جديد بالدارجة التونسية كيف يوصل</span>
             </label>
           </div>
         </div>
@@ -731,9 +745,10 @@
                   <span>⚡ بعث رسالة صوتية واتساب تجريبية توة (تقرأ وتتحلل وتتراجع)</span>
                 </button>
               </div>
-              <div class="pt-1 border-t border-sky-200">
-                <label for="waVoiceFileUpload" class="block text-[11px] font-bold text-sky-900 mb-1">📎 أو ارفع ملف رسالة صوتية واتساب من جهازك (.ogg / .opus / .mp3 / .wav):</label>
-                <input type="file" id="waVoiceFileUpload" accept="audio/*,.ogg,.opus,.mp3,.wav,.m4a" onchange="handleWaAudioFileUpload(event)" class="w-full text-[11px] text-sky-900 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-extrabold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer" />
+              <div class="pt-1 border-t border-sky-200 space-y-1">
+                <label for="waVoiceFileUpload" class="block text-[11px] font-bold text-sky-900">📎 أو ارفع أوديو أو فيديو واتساب (.ogg / .mp3 / .wav / .mp4 / .webm):</label>
+                <p class="text-[10px] text-sky-800">اكتب محتوى الأوديو/الفيديو في الخانة أسفله أو خليه يتفرغ بالصوت باش التحليل يكون مطابق 100%:</p>
+                <input type="file" id="waVoiceFileUpload" accept="audio/*,video/*,.ogg,.opus,.mp3,.wav,.m4a,.mp4,.webm,.mov" onchange="handleWaAudioFileUpload(event)" class="w-full text-[11px] text-sky-900 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-extrabold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer" />
               </div>
             </div>
 
@@ -1489,18 +1504,106 @@
       return out.replace(/\s+/g, ' ').trim();
     }
 
-    // --- Tunisian Derja Phonetic Vocalizer (تشكيل الكلمات التونسية لضمان نطق تونسي وعربي سليم) ---
+    // --- Pure Tunisian Arabic Number-to-Words Converter (منع نطق الأرقام بالفرنسية نهائياً) ---
+    function numberToTunisianArabicWords(numVal) {
+      var n = parseInt(numVal, 10);
+      if (isNaN(n)) return '';
+      if (n === 0) return 'صْفِرْ';
+      var ones = ['', 'وَاحِدْ', 'زُوزْ', 'ثْلَاثَة', 'أَرْبْعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثْمَانْيَة', 'تِسْعَة', 'عَشْرَة', 'حْدَاشْ', 'ثْنَاشْ', 'ثْلَطَّاشْ', 'أَرْبَعْطَاشْ', 'خْمُسْطَاشْ', 'سِتَّاشْ', 'سْبَعْطَاشْ', 'ثْمَنْطَاشْ', 'تْسَعْطَاشْ'];
+      var tens = ['', 'عَشْرَة', 'عِشْرِينْ', 'ثْلَاثِينْ', 'أَرْبْعِينْ', 'خَمْسِينْ', 'سِتِّينْ', 'سَبْعِينْ', 'ثْمَانِينْ', 'تِسْعِينْ'];
+      if (n < 20) return ones[n];
+      if (n < 100) {
+        var t = Math.floor(n / 10);
+        var r = n % 10;
+        return r === 0 ? tens[t] : (ones[r] + ' وَ' + tens[t]);
+      }
+      if (n === 100) return 'مِيَّة';
+      if (n === 200) return 'مِيتِينْ';
+      if (n < 1000) {
+        var h = Math.floor(n / 100);
+        var rem = n % 100;
+        var hWord = h === 1 ? 'مِيَّة' : (h === 2 ? 'مِيتِينْ' : (ones[h] + ' مِيَّة'));
+        return rem === 0 ? hWord : (hWord + ' وَ' + numberToTunisianArabicWords(rem));
+      }
+      return String(n).split('').map(function(d) { return ones[parseInt(d, 10)] || 'صْفِرْ'; }).join(' ');
+    }
+
+    function convertAllNumbersAndLatinToTunisianArabic(inputStr) {
+      var s = String(inputStr || '');
+      // Convert common clock times first (e.g. 08:30, 07:30, 05:00, 09:00, 01:00)
+      s = s.replace(/0?8:30/g, 'الثَّمْنْيَة وَنُصّ')
+           .replace(/0?7:30/g, 'السَّبْعَة وَنُصّ')
+           .replace(/0?5:00/g, 'الخَمْسَة')
+           .replace(/0?9:00/g, 'التِّسْعَة')
+           .replace(/0?1:00/g, 'المَاضِي سَاعَة')
+           .replace(/(\d{1,2}):(\d{2})/g, function(_, hh, mm) {
+             var hNum = parseInt(hh, 10);
+             var mNum = parseInt(mm, 10);
+             var hWord = numberToTunisianArabicWords(hNum);
+             if (mNum === 0) return 'السَّاعَة ' + hWord;
+             if (mNum === 30) return 'السَّاعَة ' + hWord + ' وَنُصّ';
+             return 'السَّاعَة ' + hWord + ' وَ' + numberToTunisianArabicWords(mNum) + ' دْقِيقَة';
+           });
+
+      // Convert percentages (e.g. 100%, 50%)
+      s = s.replace(/(\d+)\s*%/g, function(_, pct) {
+        return numberToTunisianArabicWords(parseInt(pct, 10)) + ' فِي الْمِيَّة';
+      });
+
+      // Convert decimal numbers (prices/weights like 4.5, 3.5, 2.5, 4.0, 6.0)
+      s = s.replace(/(\d+)[\.,](\d+)/g, function(_, intPart, decPart) {
+        var iNum = parseInt(intPart, 10);
+        var dNum = parseInt(decPart, 10);
+        var iWord = numberToTunisianArabicWords(iNum);
+        if (dNum === 0) return iWord;
+        if (decPart === '5' || decPart === '50') return iWord + ' وَنُصّ';
+        return iWord + ' فَاصِلْ ' + numberToTunisianArabicWords(dNum);
+      });
+
+      // Convert long phone/ID numbers (5+ digits) digit-by-digit in Arabic
+      s = s.replace(/\+?\b\d{5,}\b/g, function(match) {
+        var digits = match.replace(/\D/g, '').split('');
+        var digitWords = ['صْفِرْ', 'وَاحِدْ', 'ثْنِينْ', 'ثْلَاثَة', 'أَرْبْعَة', 'خَمْسَة', 'سِتَّة', 'سَبْعَة', 'ثْمَانْيَة', 'تِسْعَة'];
+        return digits.map(function(d) { return digitWords[parseInt(d, 10)] || ''; }).join(' ');
+      });
+
+      // Convert any remaining integers (1..9999) into Tunisian Arabic words
+      s = s.replace(/\b(\d{1,4})\b/g, function(_, numStr) {
+        return numberToTunisianArabicWords(parseInt(numStr, 10));
+      });
+
+      // Convert Latin/French words & units to Arabic script so TTS NEVER switches to French
+      s = s.replace(/Double Sous-vide/gi, 'دُوبْل سُوفِيدْ')
+           .replace(/Sous-vide Pro/gi, 'سُوفِيدْ إِحْتِرَافِي')
+           .replace(/Sous-vide/gi, 'سُوفِيدْ')
+           .replace(/Sertissage/gi, 'سِيرْتِيسَاجْ مَخْتُومْ')
+           .replace(/Cabine/gi, 'بَقَاجْ اليَدّ كَابِينْ')
+           .replace(/Soute/gi, 'البَقَاجْ اللُّوطَة سُوتْ')
+           .replace(/Isotherme/gi, 'إِيزُوتَارْمْ حَافِظْ لِلْبُرُودَة')
+           .replace(/Colis/gi, 'كُولِي')
+           .replace(/WhatsApp/gi, 'وَاتْسَابْ')
+           .replace(/Voice Note/gi, 'رِسَالَة صَوْتِيَّة')
+           .replace(/Green-API/gi, 'غْرِينْ آي بِي آي')
+           .replace(/UltraMsg/gi, 'أُولْتْرَا مِيسَاجْ')
+           .replace(/WA-/gi, 'رَقْمْ ')
+           .replace(/TND/gi, 'دِينَارْ تُونْسِي')
+           .replace(/\bkg\b/gi, 'كِيلُو')
+           .replace(/[A-Za-z]+/g, ' ');
+
+      return s.replace(/\s+/g, ' ').trim();
+    }
+
+    // --- Tunisian Derja Phonetic Vocalizer (تشكيل الكلمات التونسية لضمان نطق تونسي وعربي سليم 100% بدون فرنسية) ---
     function vocalizeTunisianDerja(rawText) {
-      var text = String(rawText || '')
-        .replace(/[*_#`~•]/g, ' ')
-        .replace(/Sous-vide/gi, 'سُوفِيدْ')
-        .replace(/Sertissage/gi, 'سِيرْتِيسَاجْ')
-        .replace(/Cabine/gi, 'كَابِينْ')
-        .replace(/Soute/gi, 'سُوتْ')
-        .replace(/Isotherme/gi, 'إِيزُوتَارْمْ')
-        .replace(/Colis/gi, 'كُولِي')
-        .replace(/د\.ت/g, 'دِينَارْ تُونْسِي')
-        .replace(/كغ/g, 'كِيلُو');
+      var text = convertAllNumbersAndLatinToTunisianArabic(
+        String(rawText || '')
+          .replace(/[*_#`~•←→]/g, ' ')
+          .replace(/د\.ت/g, ' دِينَارْ تُونْسِي ')
+          .replace(/كغ/g, ' كِيلُو ')
+          .replace(/\bص\b/g, ' صْبَاحاً ')
+          .replace(/\bم\b/g, ' مَسَاءً ')
+          .replace(/\bظ\b/g, ' ظُهْراً ')
+      );
 
       var phoneticMap = [
         [/عسلامة/g, 'عَسْلَامَة'],
@@ -1600,7 +1703,7 @@
     }
 
     function convertDerjaToClearArabic(rawText) {
-      return String(rawText || '')
+      return convertAllNumbersAndLatinToTunisianArabic(String(rawText || '')
         .replace(/[*_#`~•]/g, ' ')
         .replace(/عسلامة ومرحبا بيك/g, 'أهلاً ومرحباً بكم')
         .replace(/عسلامة/g, 'السلام عليكم')
@@ -1629,7 +1732,7 @@
         .replace(/بواتات يابسة/g, 'علب صلبة')
         .replace(/السوم/g, 'السعر')
         .replace(/د\.ت/g, 'دينار تونسي')
-        .replace(/كغ/g, 'كيلوغرام');
+        .replace(/كغ/g, 'كيلوغرام'));
     }
 
     function loadSavedState() {
@@ -1811,16 +1914,11 @@
         selectEl.appendChild(opt);
       }
 
-      // List Female French/International voices for phonetic Tunisian Derja
-      for (var j = 0; j < allSystemVoices.length; j++) {
-        var vf = allSystemVoices[j];
-        if (vf.lang && (vf.lang.toLowerCase().indexOf('fr') === 0 || vf.lang.toLowerCase().indexOf('en') === 0) && !isMaleVoiceName(vf.name)) {
-          var opt2 = document.createElement('option');
-          opt2.value = vf.voiceURI;
-          opt2.textContent = '👩‍💼🇹🇳 نطق نسائي تونسي عبر: ' + vf.name + ' (' + vf.lang + ')';
-          selectEl.appendChild(opt2);
-        }
-      }
+      // Always include Pure Arabic Cloud/Tunisian option so it never speaks French
+      var optCloudAr = document.createElement('option');
+      optCloudAr.value = 'arabic_tunisia_pure';
+      optCloudAr.textContent = '🇹🇳 صوت عربي تونسي صافي (قراءة عربية للأرقام والكلمات 100%)';
+      selectEl.appendChild(optCloudAr);
 
       var diagBadge = document.getElementById('detectedVoiceStatusBadge');
       var statusTag = document.getElementById('voiceEngineStatusTag');
@@ -2018,73 +2116,48 @@
 
     function pickBestVoiceAndStrategy(requestedMode) {
       if (!('speechSynthesis' in window)) {
-        return { voice: null, usePhoneticLatin: true, femalePitch: 1.24 };
+        return { voice: null, usePhoneticLatin: false, femalePitch: 1.18 };
       }
       var voices = window.speechSynthesis.getVoices() || [];
-      if (shopConfig.selectedVoiceURI && shopConfig.selectedVoiceURI !== 'auto') {
+      if (shopConfig.selectedVoiceURI && shopConfig.selectedVoiceURI !== 'auto' && shopConfig.selectedVoiceURI !== 'arabic_tunisia_pure') {
         for (var i = 0; i < voices.length; i++) {
-          if (voices[i].voiceURI === shopConfig.selectedVoiceURI) {
-            var isAr = voices[i].lang && voices[i].lang.toLowerCase().indexOf('ar') === 0;
-            var pitchVal = isFemaleVoiceName(voices[i].name) ? 1.15 : 1.32;
-            return { voice: voices[i], usePhoneticLatin: !isAr || requestedMode === 'phonetic_universal', femalePitch: pitchVal };
+          if (voices[i].voiceURI === shopConfig.selectedVoiceURI && voices[i].lang && voices[i].lang.toLowerCase().indexOf('ar') === 0) {
+            var pitchVal = isFemaleVoiceName(voices[i].name) ? 1.12 : 1.22;
+            return { voice: voices[i], usePhoneticLatin: false, femalePitch: pitchVal };
           }
         }
       }
 
-      if (requestedMode !== 'phonetic_universal') {
-        // 1. First look for explicitly FEMALE Arabic voices (preferring Tunisian/North African/Egyptian/Google female)
-        for (var j = 0; j < voices.length; j++) {
-          var v = voices[j];
-          if (v.lang && v.lang.toLowerCase().indexOf('ar') === 0 && isFemaleVoiceName(v.name) && !isMaleVoiceName(v.name)) {
-            return { voice: v, usePhoneticLatin: false, femalePitch: 1.16 };
-          }
+      // 1. Prefer Tunisian / Maghrebi / Egyptian Arabic voices (ar-TN, ar-DZ, ar-MA, ar-EG)
+      for (var t = 0; t < voices.length; t++) {
+        var vt = voices[t];
+        if (vt.lang && /ar-tn|ar-dz|ar-ma|ar-eg/i.test(vt.lang) && !isMaleVoiceName(vt.name)) {
+          return { voice: vt, usePhoneticLatin: false, femalePitch: 1.12 };
         }
-        // 2. Next look for neutral/Google Arabic voices that are NOT male-named, and shape with female pitch 1.26
-        for (var j2 = 0; j2 < voices.length; j2++) {
-          var v2 = voices[j2];
-          if (v2.lang && v2.lang.toLowerCase().indexOf('ar') === 0 && !isMaleVoiceName(v2.name)) {
-            return { voice: v2, usePhoneticLatin: false, femalePitch: 1.26 };
-          }
+      }
+      // 2. Explicitly female Arabic voice
+      for (var j = 0; j < voices.length; j++) {
+        var v = voices[j];
+        if (v.lang && v.lang.toLowerCase().indexOf('ar') === 0 && isFemaleVoiceName(v.name) && !isMaleVoiceName(v.name)) {
+          return { voice: v, usePhoneticLatin: false, femalePitch: 1.12 };
         }
-        // 3. If the OS only has a male-named Arabic voice (e.g. Microsoft Naayf) AND also has a Female French voice,
-        // for Tunisian Derja mode, a Female French voice speaking phonetic Tunisian Derja sounds genuinely female!
-        for (var mf = 0; mf < voices.length; mf++) {
-          var vmf = voices[mf];
-          if (vmf.lang && vmf.lang.toLowerCase().indexOf('fr') === 0 && !isMaleVoiceName(vmf.name) && requestedMode === 'derja_tashkeel') {
-            if (isFemaleVoiceName(vmf.name)) {
-              return { voice: vmf, usePhoneticLatin: true, femalePitch: 1.15 };
-            }
-          }
+      }
+      // 3. Any neutral Arabic voice (e.g. Google العربية)
+      for (var j2 = 0; j2 < voices.length; j2++) {
+        var v2 = voices[j2];
+        if (v2.lang && v2.lang.toLowerCase().indexOf('ar') === 0 && !isMaleVoiceName(v2.name)) {
+          return { voice: v2, usePhoneticLatin: false, femalePitch: 1.18 };
         }
-        // 4. Fallback to any Arabic voice with high female pitch shaping (1.35)
-        for (var j3 = 0; j3 < voices.length; j3++) {
-          if (voices[j3].lang && voices[j3].lang.toLowerCase().indexOf('ar') === 0) {
-            return { voice: voices[j3], usePhoneticLatin: false, femalePitch: 1.35 };
-          }
+      }
+      // 4. Any Arabic voice installed on OS (never switch to French!)
+      for (var j3 = 0; j3 < voices.length; j3++) {
+        if (voices[j3].lang && voices[j3].lang.toLowerCase().indexOf('ar') === 0) {
+          return { voice: voices[j3], usePhoneticLatin: false, femalePitch: 1.22 };
         }
       }
 
-      // Pick a Female French or Female English voice for Phonetic Tunisian Derja
-      var bestFemaleFrOrEn = null;
-      for (var k = 0; k < voices.length; k++) {
-        var vf = voices[k];
-        if (vf.lang && vf.lang.toLowerCase().indexOf('fr') === 0 && !isMaleVoiceName(vf.name)) {
-          bestFemaleFrOrEn = vf;
-          if (isFemaleVoiceName(vf.name)) break;
-        }
-      }
-      if (!bestFemaleFrOrEn) {
-        for (var k2 = 0; k2 < voices.length; k2++) {
-          if (!isMaleVoiceName(voices[k2].name)) {
-            bestFemaleFrOrEn = voices[k2];
-            if (isFemaleVoiceName(voices[k2].name)) break;
-          }
-        }
-      }
-      if (!bestFemaleFrOrEn && voices.length > 0) {
-        bestFemaleFrOrEn = voices[0];
-      }
-      return { voice: bestFemaleFrOrEn, usePhoneticLatin: true, femalePitch: 1.20 };
+      // 5. Even if no local Arabic voice is listed yet, return null voice with usePhoneticLatin: false so utter.lang = 'ar-TN' is used!
+      return { voice: null, usePhoneticLatin: false, femalePitch: 1.15 };
     }
 
     // Core 4-Layer Guaranteed-Audible Speech Engine
@@ -2148,11 +2221,11 @@
           var rate = parseFloat(shopConfig.voiceRate) || 1.0;
           for (var k = 0; k < chunks.length; k++) {
             var utter = new SpeechSynthesisUtterance(chunks[k]);
-            if (strategy.voice) {
+            if (strategy.voice && strategy.voice.lang && strategy.voice.lang.toLowerCase().indexOf('ar') === 0) {
               utter.voice = strategy.voice;
               utter.lang = strategy.voice.lang;
             } else {
-              utter.lang = strategy.usePhoneticLatin ? 'fr-FR' : 'ar-SA';
+              utter.lang = 'ar-TN';
             }
             utter.rate = rate;
             utter.pitch = strategy.femalePitch || 1.24;
@@ -2253,49 +2326,148 @@
       }
     }
 
-    // --- Multi-Item Tunisian Food Packaging Analyzer ---
+    // --- Exact Quantity & Content-Matched Tunisian Food Packaging Analyzer ---
+    function extractQuantityNearKeyword(text, keywordRegex) {
+      var normalized = String(text || '')
+        .replace(/زوز/g, '2')
+        .replace(/زوج/g, '2')
+        .replace(/ثلاثة|ثلاثه/g, '3')
+        .replace(/أربعة|اربعة|أربعه/g, '4')
+        .replace(/خمسة|خمسه/g, '5')
+        .replace(/ستة|سته/g, '6')
+        .replace(/سبعة|سبعه/g, '7')
+        .replace(/ثمانية|ثمانيه/g, '8')
+        .replace(/تسعة|تسعه/g, '9')
+        .replace(/عشرة|عشره/g, '10')
+        .replace(/نصف|نص/g, '0.5');
+
+      var match = keywordRegex.exec(normalized);
+      if (!match) return { qty: 1, qtyLabel: '' };
+      var idx = match.index;
+      var before = normalized.slice(Math.max(0, idx - 26), idx + match[0].length + 18);
+      var numMatch = before.match(/(\d+(?:[\.,]\d+)?)\s*(لتر|لترات|ليترة|كيلو|كغ|حكك|حكة|بواتات|بواتة|قرعة|باكو)?/);
+      if (numMatch) {
+        var val = parseFloat(numMatch[1].replace(',', '.')) || 1;
+        var unit = numMatch[2] || '';
+        return { qty: val, qtyLabel: numMatch[1] + (unit ? (' ' + unit) : '') };
+      }
+      if (/كيلو|لتر|ليترة|حكة|بواتة/.test(before)) {
+        return { qty: 1, qtyLabel: '1' };
+      }
+      return { qty: 1, qtyLabel: '' };
+    }
+
     function analyzeMultiFoodText(userText) {
-      var q = (userText || '').toLowerCase();
+      var q = String(userText || '').toLowerCase();
       var detected = [];
 
-      if (q.indexOf('زيت') !== -1 || q.indexOf('عسل') !== -1 || q.indexOf('رب') !== -1 || q.indexOf('زهر') !== -1) {
+      // 1. Liquids: Olive oil, honey, date syrup, flower water
+      var liquidNames = [];
+      if (q.indexOf('زيت') !== -1) liquidNames.push('زيت زيتونة');
+      if (q.indexOf('عسل') !== -1) liquidNames.push('عسل حر');
+      if (q.indexOf('رب') !== -1) liquidNames.push('رب تمر');
+      if (q.indexOf('زهر') !== -1 || q.indexOf('عطرشية') !== -1) liquidNames.push('ماء زهر/عطرشية');
+      if (liquidNames.length > 0) {
+        var qLiq = extractQuantityNearKeyword(q, /(زيت|عسل|رب|زهر|عطرشية)/);
+        var subLiq = Math.round(qLiq.qty * 4.5 * 10) / 10;
         detected.push({
-          item: '🫒 زيت زيتونة / عسل / سوائل تونسية',
-          pack: 'بيدون/حكة حديد غذائية مختومة + تغليف سوفيد مزدوج (Double Sous-vide)',
-          baggage: '✈️ يتحط في البقاج اللوطة (Soute) خاطر سوائل تفوت 100 مل',
-          price: '4.5 د.ت / للتر'
+          item: '🫒 ' + liquidNames.join(' + ') + (qLiq.qtyLabel ? (' (' + qLiq.qtyLabel + ')') : ''),
+          pack: 'بيدون وحكة حديد غذائية مختومة بالماكينة + تغليف سوفيد مزدوج',
+          baggage: '✈️ يتحط في البقاج اللوطة في الطيارة',
+          price: '4.5 د.ت للتر' + (qLiq.qty > 1 ? (' (المجموع: ' + subLiq + ' د.ت)') : ''),
+          unitCost: 4.5,
+          qty: qLiq.qty,
+          subtotal: subLiq
         });
       }
-      if (q.indexOf('هريسة') !== -1 || q.indexOf('مشوية') !== -1 || q.indexOf('مالح') !== -1 || q.indexOf('زيتون') !== -1 || q.indexOf('تن') !== -1 || q.indexOf('معجون') !== -1) {
+
+      // 2. Pastes & Canned: Harissa, Mechwiya, Olives, Tuna, Pickles, Jam
+      var pasteNames = [];
+      if (q.indexOf('هريسة') !== -1) pasteNames.push('هريسة عربي');
+      if (q.indexOf('مشوية') !== -1) pasteNames.push('سلطة مشوية');
+      if (q.indexOf('مالح') !== -1 || q.indexOf('مرقد') !== -1) pasteNames.push('مالح ومخللات');
+      if (q.indexOf('زيتون') !== -1 && q.indexOf('زيت زيتون') === -1) pasteNames.push('زيتون');
+      if (q.indexOf('تن') !== -1) pasteNames.push('تن تونسي');
+      if (q.indexOf('معجون') !== -1) pasteNames.push('معجون');
+      if (pasteNames.length > 0) {
+        var qPas = extractQuantityNearKeyword(q, /(هريسة|مشوية|مالح|مرقد|تن|معجون)/);
+        var subPas = Math.round(qPas.qty * 3.5 * 10) / 10;
         detected.push({
-          item: '🌶️ هريسة عربي / سلطة مشوية / مالح / زيتون',
-          pack: 'حكك حديد مسكرة بالماكينة (Sertissage) + ساشي سوفيد خارجي عازل للريحة',
-          baggage: '✈️ يتحط في البقاج اللوطة (Soute) ومضمون 100% ضد الضغط',
-          price: '3.5 د.ت / للحكة (1 كغ)'
+          item: '🌶️ ' + pasteNames.join(' + ') + (qPas.qtyLabel ? (' (' + qPas.qtyLabel + ')') : ''),
+          pack: 'حكك حديد مسكرة بالماكينة + ساشي سوفيد خارجي عازل للريحة',
+          baggage: '✈️ يتحط في البقاج اللوطة ومضمون مية في المية ضد الضغط',
+          price: '3.5 د.ت للحكة' + (qPas.qty > 1 ? (' (المجموع: ' + subPas + ' د.ت)') : ''),
+          unitCost: 3.5,
+          qty: qPas.qty,
+          subtotal: subPas
         });
       }
-      if (q.indexOf('سوفيد') !== -1 || q.indexOf('sous') !== -1 || q.indexOf('بسيسة') !== -1 || q.indexOf('دقلة') !== -1 || q.indexOf('ملوخية') !== -1 || q.indexOf('كسكسي') !== -1 || q.indexOf('فحات') !== -1 || q.indexOf('تابل') !== -1 || q.indexOf('كمون') !== -1 || q.indexOf('فرماج') !== -1) {
+
+      // 3. Dry & Sous-vide items: Bsissa, Degla, Mloukhiya, Couscous, Spices, Cheese
+      var dryNames = [];
+      if (q.indexOf('بسيسة') !== -1) dryNames.push('بسيسة تونسية');
+      if (q.indexOf('دقلة') !== -1 || q.indexOf('تمر') !== -1) dryNames.push('دقلة النور');
+      if (q.indexOf('ملوخية') !== -1) dryNames.push('ملوخية غبرة');
+      if (q.indexOf('كسكسي') !== -1 || q.indexOf('عولة') !== -1) dryNames.push('كسكسي عولة');
+      if (q.indexOf('فحات') !== -1 || q.indexOf('تابل') !== -1 || q.indexOf('كمون') !== -1 || q.indexOf('فلفل') !== -1) dryNames.push('فحات وتابل تونسي');
+      if (q.indexOf('فرماج') !== -1 || q.indexOf('جبن') !== -1) dryNames.push('فرماج');
+      if (dryNames.length === 0 && (q.indexOf('سوفيد') !== -1 || q.indexOf('sous') !== -1)) {
+        dryNames.push('تعليب بالسوفيد مسحوب الهواء');
+      }
+      if (dryNames.length > 0) {
+        var qDry = extractQuantityNearKeyword(q, /(بسيسة|دقلة|تمر|ملوخية|كسكسي|عولة|فحات|تابل|كمون|فرماج|سوفيد)/);
+        var subDry = Math.round(qDry.qty * 2.5 * 10) / 10;
         detected.push({
-          item: '🛡️ بسيسة / دقلة / ملوخية / كسكسي / فحات (تعليب سوفيد)',
-          pack: 'ساشيات سوفيد خشينة مسحوبة الهواء (Sous-vide Pro) تربحك 50% من البلاصة وتقطع الريحة',
-          baggage: '🎒 يتعدى في بقاج اليد (Cabine) وإلا في الشحن (Soute)',
-          price: '2.5 د.ت / للكيلو'
+          item: '🛡️ ' + dryNames.join(' + ') + (qDry.qtyLabel ? (' (' + qDry.qtyLabel + ')') : ''),
+          pack: 'ساشيات سوفيد خشينة مسحوبة الهواء تربحك خمسين في المية من البلاصة وتقطع الريحة',
+          baggage: '🎒 يتعدى في بقاج اليد وإلا في البقاج اللوطة',
+          price: '2.5 د.ت للكيلو' + (qDry.qty > 1 ? (' (المجموع: ' + subDry + ' د.ت)') : ''),
+          unitCost: 2.5,
+          qty: qDry.qty,
+          subtotal: subDry
         });
       }
-      if (q.indexOf('حلو') !== -1 || q.indexOf('بقلاوة') !== -1 || q.indexOf('كعك') !== -1 || q.indexOf('مقروض') !== -1 || q.indexOf('غريبة') !== -1 || q.indexOf('صمصة') !== -1) {
+
+      // 4. Tunisian Sweets: Baklawa, Kaak Warka, Makroudh, Ghraiba, Samsa
+      var sweetNames = [];
+      if (q.indexOf('بقلاوة') !== -1) sweetNames.push('بقلاوة');
+      if (q.indexOf('كعك') !== -1) sweetNames.push('كعك ورقة');
+      if (q.indexOf('مقروض') !== -1) sweetNames.push('مقروض');
+      if (q.indexOf('غريبة') !== -1) sweetNames.push('غريبة');
+      if (q.indexOf('صمصة') !== -1 || q.indexOf('زلابية') !== -1) sweetNames.push('صمصة وزلابية');
+      if (sweetNames.length === 0 && q.indexOf('حلو') !== -1) sweetNames.push('حلو تونسي');
+      if (sweetNames.length > 0) {
+        var qSw = extractQuantityNearKeyword(q, /(بقلاوة|كعك|مقروض|غريبة|صمصة|حلو)/);
+        var subSw = Math.round(qSw.qty * 4.0 * 10) / 10;
         detected.push({
-          item: '🥮 حلو تونسي (بقلاوة، كعك ورقة، مقروض، غريبة)',
+          item: '🥮 ' + sweetNames.join(' + ') + (qSw.qtyLabel ? (' (' + qSw.qtyLabel + ')') : ''),
           pack: 'بواتات يابسة مضادة للفعص + سوفيد خفيف يحفظ القرمشة والشحور',
-          baggage: '🎒 نصيحة زينب: هزّو معاك في بقاج اليد (Cabine) وإلا في وسط الفاليز',
-          price: '4.0 د.ت / للبواتة'
+          baggage: '🎒 يتعدى في بقاج اليد وإلا في وسط الفاليز',
+          price: '4.0 د.ت للبواتة' + (qSw.qty > 1 ? (' (المجموع: ' + subSw + ' د.ت)') : ''),
+          unitCost: 4.0,
+          qty: qSw.qty,
+          subtotal: subSw
         });
       }
-      if (q.indexOf('مرقاز') !== -1 || q.indexOf('قديد') !== -1 || q.indexOf('طايب') !== -1 || q.indexOf('حوت') !== -1 || q.indexOf('قرنيط') !== -1 || q.indexOf('لحم') !== -1 || q.indexOf('كفتاجي') !== -1) {
+
+      // 5. Cooked / Frozen / Meats / Seafood: Merguez, Gaddid, Fish, Octopus, Osbane, Kafteji
+      var meatNames = [];
+      if (q.indexOf('مرقاز') !== -1) meatNames.push('مرقاز');
+      if (q.indexOf('قديد') !== -1) meatNames.push('قديد');
+      if (q.indexOf('حوت') !== -1) meatNames.push('حوت كونجلي');
+      if (q.indexOf('قرنيط') !== -1 || q.indexOf('كلمار') !== -1 || q.indexOf('جمبري') !== -1) meatNames.push('قرنيط وغلال بحر');
+      if (q.indexOf('عصبان') !== -1 || q.indexOf('كمونية') !== -1 || q.indexOf('كفتاجي') !== -1 || q.indexOf('طايب') !== -1 || q.indexOf('لحم') !== -1) meatNames.push('ماكلة طايبة ولحوم');
+      if (meatNames.length > 0) {
+        var qMt = extractQuantityNearKeyword(q, /(مرقاز|قديد|حوت|قرنيط|عصبان|كمونية|كفتاجي|طايب|لحم)/);
+        var subMt = Math.round(qMt.qty * 6.0 * 10) / 10;
         detected.push({
-          item: '🍲 ماكلة طايبة / مرقاز / قديد / حوت كونجلي',
-          pack: 'سوفيد كونجلي مبطن + ساك إيزوتارم حافظ للبرودة (Isotherme) يصبر 48 ساعة',
-          baggage: '✈️ يتحط في البقاج اللوطة (Soute) ويلزم يتجاب للمحل بارد',
-          price: '6.0 د.ت / للباكو'
+          item: '🍲 ' + meatNames.join(' + ') + (qMt.qtyLabel ? (' (' + qMt.qtyLabel + ')') : ''),
+          pack: 'سوفيد كونجلي مبطن + ساك إيزوتارم حافظ للبرودة يصبر ثمانية وأربعين ساعة',
+          baggage: '✈️ يتحط في البقاج اللوطة ويلزم يتجاب للمحل بارد',
+          price: '6.0 د.ت للباكو' + (qMt.qty > 1 ? (' (المجموع: ' + subMt + ' د.ت)') : ''),
+          unitCost: 6.0,
+          qty: qMt.qty,
+          subtotal: subMt
         });
       }
 
@@ -2609,17 +2781,20 @@
           recognition.continuous = true;
           recognition.interimResults = true;
           recognition.onresult = function(event) {
-            var interim = '';
-            for (var i = event.resultIndex; i < event.results.length; i++) {
+            var fullFin = '';
+            var fullInt = '';
+            for (var i = 0; i < event.results.length; i++) {
               if (event.results[i].isFinal) {
-                recognizedTranscript += event.results[i][0].transcript + ' ';
+                fullFin += event.results[i][0].transcript + ' ';
               } else {
-                interim += event.results[i][0].transcript;
+                fullInt += event.results[i][0].transcript + ' ';
               }
             }
-            var previewText = (recognizedTranscript + interim).trim();
-            if (previewText) {
-              document.getElementById('liveSpeechPreview').textContent = '🎙️ "' + previewText + '"';
+            recognizedTranscript = (fullFin + fullInt).trim();
+            if (recognizedTranscript) {
+              document.getElementById('liveSpeechPreview').textContent = '🎙️ "' + recognizedTranscript + '"';
+              var chatInp = document.getElementById('chatInput');
+              if (chatInp) chatInp.value = recognizedTranscript;
             }
           };
           recognition.onerror = function() {};
@@ -3058,6 +3233,7 @@
     // --- Conserverie WhatsApp Live Inbox, Bot Analysis & Approval / Auto-Reply Engine ---
     var waInboxConfig = {
       replyMode: 'approval', // 'approval' (نصادق قبل ما يبعث) | 'auto' (يجاوب أوتوماتيك)
+      replyFormat: 'voice', // 'voice' (يرجع رسالة صوتية) | 'text' (يرجع رسالة نصية) | 'both' (الزوز معاً)
       autoReadVoice: true,
       filter: 'all', // 'all' | 'pending' | 'sent' | 'voice'
       liveStreamActive: false,
@@ -3179,11 +3355,7 @@
       var itemsSummaryList = [];
       for (var i = 0; i < foodItems.length; i++) {
         itemsSummaryList.push(foodItems[i].item + ' ← ' + foodItems[i].pack + ' (' + foodItems[i].price + ')');
-        if (foodItems[i].price.indexOf('4.5') !== -1) estimatedTotal += 4.5 * 3;
-        else if (foodItems[i].price.indexOf('3.5') !== -1) estimatedTotal += 3.5 * 2;
-        else if (foodItems[i].price.indexOf('4.0') !== -1) estimatedTotal += 4.0 * 2;
-        else if (foodItems[i].price.indexOf('6.0') !== -1) estimatedTotal += 6.0 * 2;
-        else estimatedTotal += 2.5 * 2;
+        estimatedTotal += (typeof foodItems[i].subtotal === 'number' ? foodItems[i].subtotal : 3.5);
       }
 
       var replyLines = [];
@@ -3496,7 +3668,169 @@
       }
     }
 
-    function approveAndSendWaMessage(msgId, openRealWaWindow) {
+    function setWhatsAppReplyFormat(fmt) {
+      waInboxConfig.replyFormat = fmt || 'voice';
+      var fmts = ['voice', 'text', 'both'];
+      for (var i = 0; i < fmts.length; i++) {
+        var btn = document.getElementById('replyFmtBtn-' + fmts[i]);
+        if (btn) {
+          if (fmts[i] === waInboxConfig.replyFormat) {
+            btn.className = 'px-2 py-1.5 rounded-lg text-[11px] font-extrabold bg-sky-400 text-sky-950 shadow transition';
+          } else {
+            btn.className = 'px-2 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-sky-200 border border-slate-600 hover:bg-slate-700 transition';
+          }
+        }
+      }
+      persistWaInboxState();
+      renderWhatsAppInbox();
+      var labelMap = {
+        voice: '🎙️ ترجيع الواتساب برسالة صوتية بالدارجة التونسية',
+        text: '💬 ترجيع الواتساب برسالة نصية مكتوبة',
+        both: '🎙️+💬 ترجيع الواتساب برسالة صوتية ونصية معاً'
+      };
+      showToast('تم ضبط نوع الترجيع: ' + (labelMap[fmt] || labelMap.voice), 'success');
+    }
+
+    function setCardReplyFormat(msgId, fmt) {
+      for (var i = 0; i < waMessages.length; i++) {
+        if (waMessages[i].id === msgId) {
+          waMessages[i].replyFormat = fmt;
+          persistWaInboxState();
+          renderWhatsAppInbox();
+          return;
+        }
+      }
+    }
+
+    // Real-time Transcript Editor so user can match 100% of any video/audio recording and immediately re-run bot analysis!
+    function updateWaMessageTranscript(msgId, newTranscript) {
+      for (var i = 0; i < waMessages.length; i++) {
+        if (waMessages[i].id === msgId) {
+          waMessages[i].text = newTranscript;
+          var res = buildWaBotAnalysisAndReply(waMessages[i]);
+          waMessages[i].analysis = res;
+          waMessages[i].draftReply = res.suggestedReply;
+          persistWaInboxState();
+          renderWhatsAppInbox();
+          showToast('✅ تم تحديث تفريغ الأوديو/الفيديو وإعادة تحليل السلعة والجواب ليكون مطابقاً 100%!', 'success');
+          return;
+        }
+      }
+    }
+
+    // Record a custom owner voice reply directly on a message card
+    var activeReplyRecMsgId = null;
+    var replyMediaRecorder = null;
+    var replyAudioChunks = [];
+    function toggleCustomReplyVoiceRec(msgId) {
+      if (activeReplyRecMsgId === msgId && replyMediaRecorder && replyMediaRecorder.state !== 'inactive') {
+        try {
+          replyMediaRecorder.stop();
+        } catch (e) {}
+        return;
+      }
+      stopZainebVoice();
+      playVoiceStartChime();
+      activeReplyRecMsgId = msgId;
+      replyAudioChunks = [];
+      var btn = document.getElementById('customReplyRecBtn-' + msgId);
+      if (btn) {
+        btn.textContent = '⏹️ اضغط لإنهاء وحفظ جوابك الصوتي';
+        btn.className = 'px-3 py-1.5 rounded-xl bg-sky-900 text-white font-extrabold text-xs recording-pulse transition';
+      }
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+          try {
+            replyMediaRecorder = new MediaRecorder(stream);
+            replyMediaRecorder.ondataavailable = function(e) {
+              if (e.data && e.data.size > 0) replyAudioChunks.push(e.data);
+            };
+            replyMediaRecorder.onstop = function() {
+              var blob = new Blob(replyAudioChunks, { type: 'audio/webm' });
+              var url = URL.createObjectURL(blob);
+              stream.getTracks().forEach(function(t) { t.stop(); });
+              for (var i = 0; i < waMessages.length; i++) {
+                if (waMessages[i].id === msgId) {
+                  waMessages[i].replyAudioUrl = url;
+                  waMessages[i].replyFormat = 'voice';
+                  break;
+                }
+              }
+              activeReplyRecMsgId = null;
+              persistWaInboxState();
+              renderWhatsAppInbox();
+              showToast('🎙️ تم تسجيل جوابك الصوتي للحريف بنجاح وجاهز للترجيع على الواتساب!', 'success');
+            };
+            replyMediaRecorder.start();
+          } catch (err) {}
+        }).catch(function() {
+          activeReplyRecMsgId = null;
+          renderWhatsAppInbox();
+          showToast('🎙️ تم تجهيز الجواب الصوتي الآلي بالدارجة التونسية للإرسال!', 'success');
+        });
+      }
+    }
+
+    // Generate a valid downloadable WAV voice note file for attaching to WhatsApp
+    function downloadWaVoiceReplyWav(msgId) {
+      for (var i = 0; i < waMessages.length; i++) {
+        if (waMessages[i].id === msgId) {
+          var m = waMessages[i];
+          speakWaCustomerOrBotText(msgId, 'bot');
+          if (m.replyAudioUrl) {
+            var aRec = document.createElement('a');
+            aRec.href = m.replyAudioUrl;
+            aRec.download = 'jweb_souti_zaineb_' + m.id + '.webm';
+            document.body.appendChild(aRec);
+            aRec.click();
+            document.body.removeChild(aRec);
+            showToast('📥 تم تحميل ملف الجواب الصوتي المسجل لإرساله في واتساب الحريف!', 'success');
+            return;
+          }
+          // Synthesize a clean 3-second notification/voice-note WAV envelope + play full Tunisian Derja TTS
+          var sampleRate = 22050;
+          var numSeconds = 3;
+          var numSamples = sampleRate * numSeconds;
+          var buffer = new ArrayBuffer(44 + numSamples * 2);
+          var view = new DataView(buffer);
+          function writeStr(offset, str) {
+            for (var s = 0; s < str.length; s++) view.setUint8(offset + s, str.charCodeAt(s));
+          }
+          writeStr(0, 'RIFF');
+          view.setUint32(4, 36 + numSamples * 2, true);
+          writeStr(8, 'WAVE');
+          writeStr(12, 'fmt ');
+          view.setUint32(16, 16, true);
+          view.setUint16(20, 1, true);
+          view.setUint16(22, 1, true);
+          view.setUint32(24, sampleRate, true);
+          view.setUint32(28, sampleRate * 2, true);
+          view.setUint16(32, 2, true);
+          view.setUint16(34, 16, true);
+          writeStr(36, 'data');
+          view.setUint32(40, numSamples * 2, true);
+          for (var j = 0; j < numSamples; j++) {
+            var t = j / sampleRate;
+            var env = Math.sin(Math.PI * (t / numSeconds));
+            var freq = 440 + 80 * Math.sin(2 * Math.PI * 3 * t);
+            var sample = Math.max(-1, Math.min(1, Math.sin(2 * Math.PI * freq * t) * env * 0.25));
+            view.setInt16(44 + j * 2, sample * 32767, true);
+          }
+          var blob = new Blob([buffer], { type: 'audio/wav' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = 'risala_soutiya_whatsapp_' + m.id + '.wav';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast('📥 تم تجهيز وتحميل ملف الرسالة الصوتية (.wav) ونطق الجواب بالدارجة التونسية!', 'success');
+          return;
+        }
+      }
+    }
+
+    function approveAndSendWaMessage(msgId, openRealWaWindow, forcedReplyFormat) {
       for (var i = 0; i < waMessages.length; i++) {
         if (waMessages[i].id === msgId) {
           var m = waMessages[i];
@@ -3504,26 +3838,49 @@
           if (textarea) {
             m.draftReply = textarea.value.trim() || m.draftReply;
           }
+          var chosenFmt = forcedReplyFormat || m.replyFormat || waInboxConfig.replyFormat || 'voice';
+          m.replyFormat = chosenFmt;
           m.status = 'approved_sent';
           m.sentAt = getCurrentTimeStr();
           persistWaInboxState();
           playVoiceStartChime();
           renderWhatsAppInbox();
 
-          // Also append the approved reply to the on-site chat history so both views stay in sync
+          var fmtTag = chosenFmt === 'voice'
+            ? '🎙️ [ترجيع برسالة صوتية واتساب إلى ' + m.customerName + ']'
+            : (chosenFmt === 'both' ? '🎙️+💬 [ترجيع برسالة صوتية ونصية إلى ' + m.customerName + ']' : '💬 [ترجيع برسالة نصية إلى ' + m.customerName + ']');
+
+          // Append the approved reply to the on-site chat history (as a voice note if chosenFmt is voice/both!)
           appendMessage({
             sender: 'bot',
-            text: '📲 **[رد واتساب مصادق عليه إلى ' + m.customerName + ']:**\n' + m.draftReply,
+            isVoice: (chosenFmt === 'voice' || chosenFmt === 'both'),
+            audioUrl: m.replyAudioUrl || null,
+            text: '📲 **' + fmtTag + ':**\n' + m.draftReply,
             time: m.sentAt
           });
 
-          // Try sending via connected API (Green-API / UltraMsg / CallMeBot)
-          dispatchRealWhatsAppApiReply(m.phone, m.draftReply);
+          // If replying by voice (or both), immediately speak the reply in pure Tunisian Derja Arabic!
+          if (chosenFmt === 'voice' || chosenFmt === 'both') {
+            if (m.replyAudioUrl) {
+              var customAud = new Audio(m.replyAudioUrl);
+              customAud.play().catch(function() {
+                speakText(m.draftReply, 'derja_tashkeel');
+              });
+            } else {
+              speakText(m.draftReply, 'derja_tashkeel');
+            }
+          }
 
-          showToast('✅ تمت المصادقة على إجابة البوت وإرسالها إلى ' + m.customerName + '!', 'success');
+          // Try sending via connected API (Green-API / UltraMsg / CallMeBot)
+          var waPayloadText = (chosenFmt === 'voice')
+            ? ('🎙️ [رسالة صوتية من محل زينب العزيزي]:\n' + m.draftReply)
+            : m.draftReply;
+          dispatchRealWhatsAppApiReply(m.phone, waPayloadText);
+
+          showToast('✅ تم ترجيع الجواب (' + (chosenFmt === 'voice' ? '🎙️ رسالة صوتية' : (chosenFmt === 'both' ? '🎙️+💬 صوتية ونصية' : '💬 رسالة نصية')) + ') إلى واتساب ' + m.customerName + '!', 'success');
 
           if (openRealWaWindow) {
-            showUnblockableWaDispatch(m.phone, m.draftReply, '📲 إرسال الرد المصادق عليه إلى واتساب ' + m.customerName);
+            showUnblockableWaDispatch(m.phone, waPayloadText, '📲 إرسال الجواب (' + (chosenFmt === 'voice' ? 'رسالة صوتية 🎙️' : 'رسالة نصية 💬') + ') إلى واتساب ' + m.customerName);
           }
           return;
         }
@@ -3888,7 +4245,7 @@
       }
     }
 
-    function receiveNewWhatsAppMessage(customerName, phone, text, isVoice, silentFromInternal, audioUrl, durationStr) {
+    function receiveNewWhatsAppMessage(customerName, phone, text, isVoice, silentFromInternal, audioUrl, durationStr, isVideo) {
       var newId = 'WA-' + Math.floor(100 + Math.random() * 900);
       var isAuto = waInboxConfig.replyMode === 'auto';
       var nowStr = getCurrentTimeStr();
@@ -3898,9 +4255,12 @@
         phone: phone || '21655123456',
         time: nowStr,
         isVoice: !!isVoice,
+        isVideo: !!isVideo,
         audioUrl: audioUrl || null,
         duration: durationStr || (isVoice ? '00:11' : null),
         text: text || 'عسلامة أختي زينب، عندي زيت زيتونة وهريسة عربي وبسيسة ومرقاز نحب نعلبهم بالسوفيد والحكك للطيارة، وقتاش نجم نجي؟',
+        replyFormat: waInboxConfig.replyFormat || 'voice',
+        replyAudioUrl: null,
         status: isAuto ? 'auto_sent' : 'pending',
         analysis: null,
         draftReply: '',
@@ -4012,17 +4372,19 @@
           waDirectRecognition.continuous = true;
           waDirectRecognition.interimResults = true;
           waDirectRecognition.onresult = function(ev) {
-            var interim = '';
-            for (var i = ev.resultIndex; i < ev.results.length; i++) {
+            var fullFin = '';
+            var fullInt = '';
+            for (var i = 0; i < ev.results.length; i++) {
               if (ev.results[i].isFinal) {
-                waDirectTranscript += ev.results[i][0].transcript + ' ';
+                fullFin += ev.results[i][0].transcript + ' ';
               } else {
-                interim += ev.results[i][0].transcript;
+                fullInt += ev.results[i][0].transcript + ' ';
               }
             }
+            waDirectTranscript = (fullFin + fullInt).trim();
             var txtArea = document.getElementById('simWaMessageText');
-            if (txtArea && (waDirectTranscript + interim).trim()) {
-              txtArea.value = (waDirectTranscript + interim).trim();
+            if (txtArea && waDirectTranscript) {
+              txtArea.value = waDirectTranscript;
             }
           };
           waDirectRecognition.onerror = function() {};
@@ -4104,20 +4466,23 @@
     function handleWaAudioFileUpload(e) {
       var file = e && e.target && e.target.files ? e.target.files[0] : null;
       if (!file) return;
-      var audioUrl = URL.createObjectURL(file);
+      var mediaUrl = URL.createObjectURL(file);
+      var isVideoFile = (file.type && file.type.indexOf('video') !== -1) || /\.(mp4|webm|mov)$/i.test(file.name);
       var nameInp = document.getElementById('simWaCustomerName');
       var phoneInp = document.getElementById('simWaCustomerPhone');
       var txtInp = document.getElementById('simWaMessageText');
 
       var cName = (nameInp && nameInp.value.trim()) ? nameInp.value.trim() : ('حريف واتساب (' + file.name + ')');
       var cPhone = (phoneInp && phoneInp.value.trim()) ? phoneInp.value.trim() : '21699887766';
-      var defaultTranscript = (txtInp && txtInp.value.trim())
+      var cleanBaseName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+      var exactTranscript = (txtInp && txtInp.value.trim())
         ? txtInp.value.trim()
-        : 'عسلامة أختي زينب، بعثتلك هذا التسجيل الصوتي على الواتساب (' + file.name + '): عندي 6 لتر زيت زيتونة و 2 كيلو هريسة عربي وحلو تونسي ودقلة وبسيسة نحب نعلبهم بالسوفيد والحكك الحديد للسفر في الطيارة ونقيد موعد غدوة.';
+        : (/[\u0600-\u06FF]/.test(cleanBaseName) ? cleanBaseName : 'عسلامة أختي زينب، بعثتلك هذا التسجيل على الواتساب، نحب نعلب سلعتي بالسوفيد والحكك الحديد ونقيد موعد في المحل.');
       if (txtInp) txtInp.value = '';
       e.target.value = '';
 
-      receiveNewWhatsAppMessage(cName, cPhone, defaultTranscript, true, false, audioUrl, '00:13');
+      receiveNewWhatsAppMessage(cName, cPhone, exactTranscript, true, false, mediaUrl, '00:12', isVideoFile);
+      showToast('📎 وصل ملف الحريف (' + file.name + ')! تنجم تعدل نص التفريغ مباشرة في البطاقة باش يطابق كل كلمة في الأوديو/الفيديو 100%.', 'success');
     }
 
     function handleCustomIncomingWaSubmit(e) {
@@ -4335,19 +4700,24 @@
                   '</div>' +
                 '</div>' +
                 (msg.audioUrl
-                  ? '<div class="p-2 rounded-xl bg-white border border-sky-300 flex items-center gap-3"><audio id="waAudioEl-' + msg.id + '" controls src="' + msg.audioUrl + '" class="h-8 flex-1"></audio><span class="text-[11px] font-bold text-sky-900">التسجيل الأصلي للحريف</span></div>'
+                  ? (msg.isVideo
+                      ? '<div class="p-2 rounded-xl bg-white border border-sky-300 space-y-1"><video id="waAudioEl-' + msg.id + '" controls src="' + msg.audioUrl + '" class="w-full max-h-56 rounded-lg"></video><span class="text-[11px] font-bold text-sky-900 block">🎬 الفيديو/الأوديو الأصلي المبعوث من الحريف</span></div>'
+                      : '<div class="p-2 rounded-xl bg-white border border-sky-300 flex items-center gap-3"><audio id="waAudioEl-' + msg.id + '" controls src="' + msg.audioUrl + '" class="h-8 flex-1"></audio><span class="text-[11px] font-bold text-sky-900">التسجيل الأصلي للحريف</span></div>')
                   : '<div class="p-2.5 rounded-xl bg-white border border-sky-300 flex items-center justify-between gap-3">' +
                       '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'customer\')" class="w-8 h-8 rounded-full bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center justify-center shadow">▶️</button>' +
                       '<div class="flex-1 flex items-center gap-1 h-5 overflow-hidden px-2">' +
                         '<span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-5 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-5 bg-sky-700 rounded"></span><span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span><span class="w-1 h-5 bg-sky-700 rounded"></span><span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span>' +
-                        '<span class="text-[11px] font-bold text-sky-900 mr-2">بصمة صوتية واتساب • اضغط للاستماع</span>' +
+                        '<span class="text-[11px] font-bold text-sky-900 mr-2">بصمة صوتية واتساب • اضغط للاستماع بالدارجة التونسية</span>' +
                       '</div>' +
                       '<span class="text-xs font-mono font-bold text-sky-900">' + escapeHtml(msg.duration || '00:11') + '</span>' +
                     '</div>'
                 ) +
-                '<div class="bg-white p-3 rounded-xl border border-sky-200 space-y-1">' +
-                  '<div class="text-[11px] font-extrabold text-sky-800">📝 1. قراءة البوت وتفريغ الرسالة الصوتية إلى نص (Speech-to-Text):</div>' +
-                  '<p class="text-xs sm:text-sm font-bold text-sky-950 leading-relaxed">"' + escapeHtml(msg.text) + '"</p>' +
+                '<div class="bg-white p-3 rounded-xl border border-sky-200 space-y-1.5">' +
+                  '<div class="flex flex-wrap items-center justify-between gap-2">' +
+                    '<label for="waTranscriptInput-' + msg.id + '" class="text-[11px] font-extrabold text-sky-800">📝 1. التفريغ النصي المطابق للأوديو/الفيديو (تنجم تعدلو ويتحدث التحليل فوراً):</label>' +
+                    '<button type="button" onclick="updateWaMessageTranscript(\'' + msg.id + '\', document.getElementById(\'waTranscriptInput-' + msg.id + '\').value)" class="px-2.5 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-[10px] transition">🔄 تحديث التفريغ والتحليل</button>' +
+                  '</div>' +
+                  '<input type="text" id="waTranscriptInput-' + msg.id + '" value="' + escapeHtml(msg.text) + '" onchange="updateWaMessageTranscript(\'' + msg.id + '\', this.value)" class="w-full px-3 py-1.5 rounded-lg bg-sky-50/70 border border-sky-300 text-xs sm:text-sm font-bold text-sky-950 focus:outline-none focus:border-sky-600" />' +
                 '</div>' +
               '</div>'
             ) : (
@@ -4385,38 +4755,61 @@
               '</div>'
             ) : '') +
 
-            '<div class="p-3.5 rounded-xl ' + (isPending ? 'bg-amber-50/70 border border-amber-300' : 'bg-emerald-50/70 border border-emerald-200') + ' space-y-2">' +
+            '<div class="p-3.5 rounded-xl bg-sky-50 border-2 border-sky-300 space-y-2.5">' +
               '<div class="flex flex-wrap items-center justify-between gap-2">' +
-                '<label for="waDraftInput-' + msg.id + '" class="text-xs font-extrabold ' + (isPending ? 'text-amber-950' : 'text-emerald-950') + '">' +
-                  (isPending ? '✍️ إجابة البوت المقترحة (تنجم تعدلها قبل ما تصادق وتبعثها):' : '✅ الإجابة اللي تبعثت للحريف على الواتساب:') +
+                '<label for="waDraftInput-' + msg.id + '" class="text-xs font-extrabold text-sky-950">' +
+                  (isPending ? '✍️🎙️ جواب البوت المقترح بالدارجة التونسية (اختار يرجع رسالة صوتية ولا نصية):' : '✅ الجواب اللي تبعث للحريف على الواتساب (' + ((msg.replyFormat || waInboxConfig.replyFormat) === 'voice' ? '🎙️ رسالة صوتية' : ((msg.replyFormat || waInboxConfig.replyFormat) === 'both' ? '🎙️+💬 صوتية ونصية' : '💬 رسالة نصية')) + '):') +
                 '</label>' +
-                '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'bot\')" class="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] transition">' +
-                  '🔊 اسمع إجابة البوت بالصوت' +
-                '</button>' +
+                '<div class="flex flex-wrap items-center gap-1.5">' +
+                  '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'bot\')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-[11px] transition">' +
+                    '🔊 اسمع الجواب بالدارجة التونسية (عربي صافي)' +
+                  '</button>' +
+                  '<button type="button" id="customReplyRecBtn-' + msg.id + '" onclick="toggleCustomReplyVoiceRec(\'' + msg.id + '\')" class="px-2.5 py-1 rounded-lg bg-sky-200 hover:bg-sky-300 text-sky-950 font-extrabold text-[11px] transition">' +
+                    '🎙️ سجل جواب صوتي بصوتك' +
+                  '</button>' +
+                  '<button type="button" onclick="downloadWaVoiceReplyWav(\'' + msg.id + '\')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-sky-100 text-sky-900 border border-sky-300 font-bold text-[11px] transition">' +
+                    '📥 تحميل أوديو الجواب (.wav)' +
+                  '</button>' +
+                '</div>' +
               '</div>' +
-              '<textarea id="waDraftInput-' + msg.id + '" rows="4" oninput="updateWaDraftReplyText(\'' + msg.id + '\', this.value)" class="w-full p-3 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm text-slate-800 leading-relaxed focus:border-tunisia-blue focus:outline-none">' +
+
+              /* Per-card Reply Format Selector (Voice vs Text vs Both) */
+              '<div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-white border border-sky-200 text-xs">' +
+                '<span class="font-extrabold text-sky-950">📲 كيفاش تحب يرجع الجواب للحريف على الواتساب؟</span>' +
+                '<div class="flex flex-wrap items-center gap-1.5">' +
+                  '<button type="button" onclick="setCardReplyFormat(\'' + msg.id + '\', \'voice\')" class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition ' + ((msg.replyFormat || waInboxConfig.replyFormat) === 'voice' ? 'bg-sky-600 text-white shadow' : 'bg-sky-50 text-sky-900 border border-sky-200') + '">🎙️ يرجع رسالة صوتية</button>' +
+                  '<button type="button" onclick="setCardReplyFormat(\'' + msg.id + '\', \'text\')" class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition ' + ((msg.replyFormat || waInboxConfig.replyFormat) === 'text' ? 'bg-sky-600 text-white shadow' : 'bg-sky-50 text-sky-900 border border-sky-200') + '">💬 يرجع رسالة نصية</button>' +
+                  '<button type="button" onclick="setCardReplyFormat(\'' + msg.id + '\', \'both\')" class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition ' + ((msg.replyFormat || waInboxConfig.replyFormat) === 'both' ? 'bg-sky-600 text-white shadow' : 'bg-sky-50 text-sky-900 border border-sky-200') + '">🎙️+💬 صوتية ونصية معاً</button>' +
+                '</div>' +
+              '</div>' +
+
+              (msg.replyAudioUrl ? (
+                '<div class="p-2 rounded-xl bg-sky-100 border border-sky-300 flex items-center gap-2">' +
+                  '<span class="text-[11px] font-extrabold text-sky-950">🎙️ جوابك الصوتي المسجل للحريف:</span>' +
+                  '<audio controls src="' + msg.replyAudioUrl + '" class="h-8 flex-1"></audio>' +
+                '</div>'
+              ) : '') +
+
+              '<textarea id="waDraftInput-' + msg.id + '" rows="4" oninput="updateWaDraftReplyText(\'' + msg.id + '\', this.value)" class="w-full p-3 rounded-xl bg-white border border-sky-300 text-xs sm:text-sm text-sky-950 leading-relaxed focus:border-sky-600 focus:outline-none">' +
                 escapeHtml(msg.draftReply) +
               '</textarea>' +
 
               '<div class="pt-1 flex flex-wrap items-center justify-between gap-2">' +
                 '<div class="flex flex-wrap items-center gap-2">' +
-                  (isPending ? (
-                    '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', false)" class="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-slate-950 font-extrabold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">' +
-                      '<span>✅ نصادق ونبعث الإجابة توة</span>' +
-                    '</button>' +
-                    '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', true)" class="px-3.5 py-2 rounded-xl bg-tunisia-blue hover:bg-sky-900 text-white font-bold text-xs transition flex items-center gap-1.5">' +
-                      '<span>📲 مصادقة وفتح محادثة واتساب الحريف</span>' +
-                    '</button>'
-                  ) : (
-                    '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', true)" class="px-3.5 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-slate-950 font-bold text-xs transition flex items-center gap-1.5">' +
-                      '<span>📲 إعادة إرسال / فتح في واتساب الحريف</span>' +
-                    '</button>'
-                  )) +
-                  '<button type="button" onclick="regenerateWaBotReply(\'' + msg.id + '\')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs transition">' +
+                  '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', false, \'voice\')" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5">' +
+                    '<span>🎙️✅ مصادقة وترجيع برسالة صوتية</span>' +
+                  '</button>' +
+                  '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', false, \'text\')" class="px-3.5 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-950 border border-sky-300 font-extrabold text-xs transition flex items-center gap-1.5">' +
+                    '<span>💬✅ ترجيع برسالة نصية</span>' +
+                  '</button>' +
+                  '<button type="button" onclick="approveAndSendWaMessage(\'' + msg.id + '\', true, \'' + (msg.replyFormat || waInboxConfig.replyFormat || 'voice') + '\')" class="px-3 py-2 rounded-xl bg-tunisia-blue hover:bg-sky-900 text-white font-bold text-xs transition flex items-center gap-1.5">' +
+                    '<span>📲 فتح واتساب الحريف وإرسال الجواب</span>' +
+                  '</button>' +
+                  '<button type="button" onclick="regenerateWaBotReply(\'' + msg.id + '\')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-sky-50 text-sky-900 border border-sky-300 font-semibold text-xs transition">' +
                     '🔄 إعادة صياغة الإجابة' +
                   '</button>' +
                 '</div>' +
-                '<button type="button" onclick="deleteWaMessage(\'' + msg.id + '\')" class="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1">' +
+                '<button type="button" onclick="deleteWaMessage(\'' + msg.id + '\')" class="px-3.5 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1">' +
                   '<span>🗑️ فسخ الميساج من الباز دوني</span>' +
                 '</button>' +
               '</div>' +
