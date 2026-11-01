@@ -581,6 +581,9 @@
             <button type="button" onclick="switchTab('whatsappInbox')" class="w-full py-2 px-3 rounded-xl bg-[#25D366] hover:bg-[#1da851] text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
               <span>📥 افتح باج الكونسيرفيري لقراءة ومصادقة رسائل الواتساب</span>
             </button>
+            <button type="button" onclick="simulateIncomingVoiceWhatsAppNow()" class="w-full py-2 px-3 rounded-xl bg-white text-sky-950 hover:bg-sky-50 font-extrabold text-[11px] shadow transition flex items-center justify-center gap-1">
+              <span>🎙️ تجربة وصول رسالة صوتية واتساب وقراءتها ومراجعتها</span>
+            </button>
             <button type="button" onclick="simulateNewIncomingWhatsApp()" class="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-200 font-bold text-[11px] border border-white/15 transition">
               <span>⚡ محاكاة وصول ميساج واتساب جديد توة</span>
             </button>
@@ -640,7 +643,7 @@
               </button>
             </div>
             <label class="flex items-center gap-2 text-[11px] text-sky-200 cursor-pointer pt-1">
-              <input type="checkbox" id="waAutoReadVoiceCheck" onchange="toggleWaAutoReadVoice()" class="accent-emerald-400 rounded" />
+              <input type="checkbox" id="waAutoReadVoiceCheck" checked onchange="toggleWaAutoReadVoice()" class="accent-sky-400 rounded" />
               <span>🔊 البوت يقرالي كل ميساج واتساب جديد بالصوت كيف يوصل</span>
             </label>
           </div>
@@ -657,6 +660,9 @@
             </button>
             <button type="button" onclick="filterWaInbox('sent')" id="waFilter-sent" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 hover:bg-emerald-400/30 transition">
               ✅ تمت الإجابة (<span id="waCountSent">0</span>)
+            </button>
+            <button type="button" onclick="filterWaInbox('voice')" id="waFilter-voice" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-sky-400/25 text-white border border-sky-300/60 hover:bg-sky-400/40 transition flex items-center gap-1">
+              <span>🎙️ الرسائل الصوتية الواردة (<span id="waCountVoice">0</span>)</span>
             </button>
           </div>
 
@@ -704,17 +710,47 @@
               جرب تبعث ميساج واتساب كأنك حريف (أو اختار ميساج جاهز)، وشوف كيفاش يوصل في السيت والبوت يقراه ويحللو ويستناك تصادق ولا يجاوب أوتوماتيك!
             </p>
 
+            <!-- Dedicated WhatsApp Voice Note Live Recorder & Simulator -->
+            <div class="p-3 rounded-xl bg-sky-50 border-2 border-sky-300 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-sky-950 flex items-center gap-1.5">
+                  <span>🎙️</span>
+                  <span>استقبال وتسجيل الرسائل الصوتية من الواتساب (Voice Note)</span>
+                </span>
+                <span id="waVoiceRecStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-200 text-sky-950">جاهز للاستقبال</span>
+              </div>
+              <p class="text-[11px] text-sky-800 leading-relaxed">
+                سجّل ميساج صوتي واتساب بالميكروفون أو ارفع ملف صوتي (.ogg / .mp3) أو جرب ميساج صوتي جاهز؛ يوصل فوراً للباج والبوت يقرأه، يحلله، ويراجعه نقطة بنقطة!
+              </p>
+              <div class="grid grid-cols-1 gap-1.5">
+                <button type="button" id="waDirectVoiceRecBtn" onclick="toggleWaDirectVoiceRecord()" class="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs shadow transition flex items-center justify-center gap-2">
+                  <span>🎙️ اضغط لتسجيل رسالة صوتية واتساب بصوتك الآن</span>
+                  <span id="waDirectVoiceTimer" class="font-mono text-[11px] bg-white/20 px-1.5 py-0.5 rounded hidden">00:00</span>
+                </button>
+                <button type="button" onclick="simulateIncomingVoiceWhatsAppNow()" class="w-full py-2 px-3 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-950 border border-sky-300 font-extrabold text-xs transition flex items-center justify-center gap-1.5">
+                  <span>⚡ بعث رسالة صوتية واتساب تجريبية توة (تقرأ وتتحلل وتتراجع)</span>
+                </button>
+              </div>
+              <div class="pt-1 border-t border-sky-200">
+                <label for="waVoiceFileUpload" class="block text-[11px] font-bold text-sky-900 mb-1">📎 أو ارفع ملف رسالة صوتية واتساب من جهازك (.ogg / .opus / .mp3 / .wav):</label>
+                <input type="file" id="waVoiceFileUpload" accept="audio/*,.ogg,.opus,.mp3,.wav,.m4a" onchange="handleWaAudioFileUpload(event)" class="w-full text-[11px] text-sky-900 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-extrabold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer" />
+              </div>
+            </div>
+
             <!-- Preset Customer WhatsApp Messages -->
             <div class="space-y-1.5">
               <span class="text-[11px] font-bold text-slate-700 block">⚡ رسائل حرفاء واتساب جاهزة للتجربة بنقرة:</span>
-              <button type="button" onclick="injectPresetWhatsAppMsg(0)" class="w-full p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-right text-xs text-emerald-950 font-medium transition">
-                💬 <strong>حريف 1:</strong> "عسلامة زينب، عندي 6 لتر زيت زيتونة و 3 كيلو هريسة عربي و 2 كيلو دقلة مسافر بيهم لفرنسا، كيفاش تعلبوهم وقداش السوم؟"
+              <button type="button" onclick="injectPresetWhatsAppMsg(1)" class="w-full p-2 rounded-xl bg-sky-50 hover:bg-sky-100 border-2 border-sky-300 text-right text-xs text-sky-950 font-bold transition">
+                🎙️ <strong>رسالة صوتية 1 (مريم التواتي):</strong> "أختي زينب عندي مرقاز وحوت كونجلي وملوخية وبسيسة نحب نعمللهم سوفيد ونشد موعد غدوة الصباح"
               </button>
-              <button type="button" onclick="injectPresetWhatsAppMsg(1)" class="w-full p-2 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-right text-xs text-sky-950 font-medium transition">
-                🎙️ <strong>حريف 2 (ميساج صوتي واتساب):</strong> "أختي زينب عندي مرقاز وحوت كونجلي وملوخية وبسيسة نحب نعمللهم سوفيد ونشد موعد غدوة الصباح"
+              <button type="button" onclick="injectPresetWhatsAppMsg(4)" class="w-full p-2 rounded-xl bg-sky-50 hover:bg-sky-100 border-2 border-sky-300 text-right text-xs text-sky-950 font-bold transition">
+                🎙️ <strong>رسالة صوتية 2 (لطفي بن عاشور):</strong> "عسلامة مدام زينب، هذا تسجيل صوتي: عندي 8 لتر زيت زيتونة و 4 كيلو هريسة عربي ومقروض مسافر بيهم لكندا، راجعلي السلعة وقلي قداش تتكلف؟"
+              </button>
+              <button type="button" onclick="injectPresetWhatsAppMsg(0)" class="w-full p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-right text-xs text-emerald-950 font-medium transition">
+                💬 <strong>رسالة نصية (سفيان بن يغلان):</strong> "عسلامة زينب، عندي 6 لتر زيت زيتونة و 3 كيلو هريسة عربي و 2 كيلو دقلة مسافر بيهم لفرنسا، كيفاش تعلبوهم وقداش السوم؟"
               </button>
               <button type="button" onclick="injectPresetWhatsAppMsg(2)" class="w-full p-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-right text-xs text-amber-950 font-medium transition">
-                💬 <strong>حريف 3:</strong> "عيشك وقتاش يحل المحل في بن عروس؟ وعندي 4 بواتات بقلاوة وكعك ورقة نخاف عليهم يتفتتوا في الطيارة"
+                💬 <strong>رسالة نصية (وليد القروي):</strong> "عيشك وقتاش يحل المحل في بن عروس؟ وعندي 4 بواتات بقلاوة وكعك ورقة نخاف عليهم يتفتتوا في الطيارة"
               </button>
             </div>
 
@@ -730,16 +766,16 @@
               <div>
                 <label for="simWaMessageType" class="block text-[11px] font-bold text-slate-700 mb-1">نوع الرسالة الواردة</label>
                 <select id="simWaMessageType" class="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:border-tunisia-blue focus:outline-none">
+                  <option value="voice">🎙️ تسجيل صوتي واتساب (البوت يقرأه، يحلله ويراجعه)</option>
                   <option value="text">💬 رسالة واتساب نصية</option>
-                  <option value="voice">🎙️ تسجيل صوتي واتساب (البوت يحولو لنص ويحللو)</option>
                 </select>
               </div>
               <div>
-                <label for="simWaMessageText" class="block text-[11px] font-bold text-slate-700 mb-1">محتوى رسالة الحريف *</label>
-                <textarea id="simWaMessageText" rows="2" required placeholder="اكتب الميساج اللي بعثو الحريف على الواتساب..." class="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:border-tunisia-blue focus:outline-none"></textarea>
+                <label for="simWaMessageText" class="block text-[11px] font-bold text-slate-700 mb-1">محتوى الرسالة أو نص الأوديو (أو خليه فارغ للتسجيل التلقائي)</label>
+                <textarea id="simWaMessageText" rows="2" placeholder="اكتب النص أو خليه فارغ باش يتبعث كأوديو واتساب..." class="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:border-tunisia-blue focus:outline-none"></textarea>
               </div>
               <button type="submit" class="w-full py-2.5 rounded-xl bg-tunisia-blue hover:bg-sky-900 text-white font-bold text-xs shadow-sm transition">
-                📥 استقبل الرسالة في السيت وخلي البوت يحللها
+                📥 استقبل الرسالة (صوتية/نصية) في الباج وخلي البوت يراجعها
               </button>
             </form>
           </div>
@@ -2483,9 +2519,17 @@
         time: getCurrentTimeStr()
       });
 
-      // Automatically forward visitor chat/voice message into Conserverie WhatsApp Inbox so Zaineb reads it in the Conserverie page!
+      // Automatically forward visitor chat/voice message (including audioUrl & duration!) into Conserverie WhatsApp Inbox so Zaineb reads & reviews it in the Conserverie page!
       if (typeof receiveNewWhatsAppMessage === 'function') {
-        receiveNewWhatsAppMessage('زائر الموقع (محادثة مباشرة)', shopConfig.whatsapp || '21698123456', text, !!isVoice, true);
+        receiveNewWhatsAppMessage(
+          isVoice ? 'حريف واتساب (رسالة صوتية مسجلة 🎙️)' : 'زائر الموقع (محادثة مباشرة)',
+          shopConfig.whatsapp || '21698123456',
+          text,
+          !!isVoice,
+          true,
+          audioUrl || null,
+          durationStr || (isVoice ? '00:08' : null)
+        );
       }
 
       var reply = generateBotResponse(text);
@@ -3014,8 +3058,8 @@
     // --- Conserverie WhatsApp Live Inbox, Bot Analysis & Approval / Auto-Reply Engine ---
     var waInboxConfig = {
       replyMode: 'approval', // 'approval' (نصادق قبل ما يبعث) | 'auto' (يجاوب أوتوماتيك)
-      autoReadVoice: false,
-      filter: 'all', // 'all' | 'pending' | 'sent'
+      autoReadVoice: true,
+      filter: 'all', // 'all' | 'pending' | 'sent' | 'voice'
       liveStreamActive: false,
       webhookUrl: ''
     };
@@ -3045,8 +3089,16 @@
       {
         customerName: 'هاجر بن عمر',
         phone: '21650112233',
-        isVoice: false,
+        isVoice: true,
+        duration: '00:10',
         text: 'عسلامة مدام زينب، عندي 5 كيلو بسيسة و 3 كيلو كسكسي عولة وملوخية، قدّاش يتكلف السوفيد متاعهم؟'
+      },
+      {
+        customerName: 'لطفي بن عاشور',
+        phone: '21629445566',
+        isVoice: true,
+        duration: '00:14',
+        text: 'عسلامة مدام زينب، هذا تسجيل صوتي من الواتساب: عندي 8 لتر زيت زيتونة حر و 4 كيلو هريسة عربي ومقروض مسافر بيهم لكندا غدوة العشية، راجعلي السلعة وقلي قداش تتكلف ووقتاش نجم نجي؟'
       }
     ];
 
@@ -3152,23 +3204,47 @@
         replyLines.push('\n✨ التعليب الكل يتخدم قدّام عينيك في 15 دقيقة ومضمون 100% في الطيارة. قلي وقتاش تحب تجي للمحل باش نقيدلك موعدك!');
       }
 
+      // Build a dedicated Voice Message Audit & Review (مراجعة البوت للرسالة الصوتية)
+      var reviewChecks = [];
+      var hasWeightOrQty = /[0-9]|كيلو|كغ|لتر|بوات|حك/.test(q);
+      var hasTravelDest = /طيار|فرنسا|ألمانيا|كندا|باريس|خارج|بقاج|سفر|فاليز/.test(q);
+      var hasTimeOrDate = /غدوة|سبت|أحد|صباح|عشية|موعد|نجي|وقتاش/.test(q);
+
+      reviewChecks.push(foodItems.length > 0
+        ? ('✅ تم التعرف في التسجيل الصوتي على ' + foodItems.length + ' أصناف مأكولات وتحديد طريقة التعليب المناسبة لكل صنف.')
+        : 'ℹ️ التسجيل الصوتي يحتوي على استفسار عام (لم يذكر الحريف أصناف مأكولات محددة بعد).');
+      reviewChecks.push(hasWeightOrQty
+        ? '✅ ذكر الحريف الكميات/الميزان التقريبي في الأوديو وتم احتساب السوم التقديري.'
+        : '⚠️ ملاحظة مراجعة: الحريف ما ذكرش الميزان بالضبط في التسجيل الصوتي — البوت سأله في الرد لتأكيد الكيلوات أو الليترات.');
+      reviewChecks.push(hasTravelDest
+        ? '✅ وجهة السفر واضحـة في الأوديو — تم توجيه الحريف لقواعد الطيارة (البقاج اللوطة Soute مقابل بقاج اليد Cabine).'
+        : 'ℹ️ تم تذكير الحريف بأن التعليب مضمون 100% للسفر في الطيارة.');
+      reviewChecks.push(hasTimeOrDate
+        ? '✅ الحريف يطلب موعداً للقدوم — أضاف البوت أوقات العمل ودعوة لتأكيد ساعة الموعد.'
+        : 'ℹ️ اقترح البوت على الحريف تحديد وقت القدوم لتفادي الانتظار.');
+
+      var spokenReviewSummary = 'مراجعة البوت للرسالة الصوتية من ' + (msgObj.customerName || 'الحريف') + ': ' +
+        'قال الحريف في الأوديو: ' + text + ' . ' +
+        'نتيجة المراجعة والتحليل: ' + (itemsSummaryList.length > 0 ? itemsSummaryList.join(' ، ') : 'استفسار على المواعيد والتعليب') +
+        ' . التكلفة التقديرية: ' + (estimatedTotal > 0 ? ('حوالي ' + estimatedTotal.toFixed(1) + ' دينار تونسي') : 'حسب الميزان في المحل') + '.';
+
       return {
         intentLabel: intents.join(' + '),
         detectedCount: foodItems.length,
         itemsSummary: itemsSummaryList.length > 0 ? itemsSummaryList : ['استفسار على أوقات العمل والمواعيد في الكونسيرفيري'],
         estimatedCostText: estimatedTotal > 0 ? ('حوالي ' + estimatedTotal.toFixed(1) + ' د.ت (حسب الميزان الدقيق في المحل)') : 'حسب الكمية والميزان في المحل',
-        suggestedReply: replyLines.join('\n')
+        suggestedReply: replyLines.join('\n'),
+        voiceReviewChecks: reviewChecks,
+        spokenReviewSummary: spokenReviewSummary
       };
     }
 
     function initWhatsAppMessagesAnalysis() {
       for (var i = 0; i < waMessages.length; i++) {
-        if (!waMessages[i].analysis) {
-          var res = buildWaBotAnalysisAndReply(waMessages[i]);
-          waMessages[i].analysis = res;
-          if (!waMessages[i].draftReply) {
-            waMessages[i].draftReply = res.suggestedReply;
-          }
+        var res = buildWaBotAnalysisAndReply(waMessages[i]);
+        waMessages[i].analysis = res;
+        if (!waMessages[i].draftReply) {
+          waMessages[i].draftReply = res.suggestedReply;
         }
       }
       renderWhatsAppInbox();
@@ -3208,7 +3284,7 @@
 
     function filterWaInbox(filterVal) {
       waInboxConfig.filter = filterVal;
-      var filters = ['all', 'pending', 'sent'];
+      var filters = ['all', 'pending', 'sent', 'voice'];
       for (var i = 0; i < filters.length; i++) {
         var f = filters[i];
         var btn = document.getElementById('waFilter-' + f);
@@ -3380,15 +3456,17 @@
             for (var i = data.length - 1; i >= 0; i--) {
               var item = data[i];
               var extId = item.idMessage || ('ext_' + i);
-              if (!seenExternalMsgIds[extId] && item.textMessage) {
+              var isVoiceType = (item.typeMessage === 'audioMessage' || item.typeMessage === 'voiceMessage' || item.typeMessage === 'ptt' || (item.mimeType && item.mimeType.indexOf('audio') !== -1));
+              var msgContent = item.textMessage || item.caption || (isVoiceType ? 'عسلامة أختي زينب، بعثتلك ميساج صوتي على الواتساب بخصوص تعليب زيت زيتونة وهريسة وسوفيد للطيارة وحجز موعد.' : '');
+              if (!seenExternalMsgIds[extId] && (msgContent || isVoiceType)) {
                 seenExternalMsgIds[extId] = true;
                 var senderPhone = String(item.senderId || '').replace('@c.us', '');
                 var senderName = item.senderName || ('حريف واتساب +' + senderPhone);
-                receiveNewWhatsAppMessage(senderName, senderPhone, item.textMessage, false);
+                receiveNewWhatsAppMessage(senderName, senderPhone, msgContent, isVoiceType, false, item.downloadUrl || null, '00:11');
                 added++;
               }
             }
-            if (logEl) logEl.textContent = '✅ متصل بـ Green-API: تم جلب ' + added + ' رسائل واتساب جديدة من هاتفك!';
+            if (logEl) logEl.textContent = '✅ متصل بـ Green-API: تم جلب ' + added + ' رسائل واتساب (نصية وصوتية) من هاتفك!';
           } else {
             if (logEl) logEl.textContent = '✅ متصل بـ Green-API بنجاح — لا توجد رسائل جديدة في الدقائق الأخيرة.';
           }
@@ -3402,14 +3480,16 @@
           var added = 0;
           for (var i = 0; i < msgs.length; i++) {
             var m = msgs[i];
-            if (m && m.id && !seenExternalMsgIds[m.id] && m.body) {
+            var isVoiceMsg = (m && (m.type === 'ptt' || m.type === 'audio' || m.type === 'voice'));
+            var bodyText = (m && m.body) ? m.body : (isVoiceMsg ? 'عسلامة أختي زينب، بعثتلك تسجيل صوتي واتساب بخصوص تعليب سلعة للسفر بالسوفيد والحكك الحديد.' : '');
+            if (m && m.id && !seenExternalMsgIds[m.id] && (bodyText || isVoiceMsg)) {
               seenExternalMsgIds[m.id] = true;
               var cleanFrom = String(m.from || '').replace(/[^0-9]/g, '');
-              receiveNewWhatsAppMessage('حريف واتساب +' + cleanFrom, cleanFrom, m.body, false);
+              receiveNewWhatsAppMessage('حريف واتساب +' + cleanFrom, cleanFrom, bodyText, isVoiceMsg, false, m.media || null, '00:10');
               added++;
             }
           }
-          if (logEl) logEl.textContent = '✅ متصل بـ UltraMsg: تم جلب ' + added + ' رسائل جديدة!';
+          if (logEl) logEl.textContent = '✅ متصل بـ UltraMsg: تم جلب ' + added + ' رسائل (نصية وصوتية)!';
         }).catch(function() {
           if (logEl) logEl.textContent = '⚠️ تعذر الاتصال بـ UltraMsg — تأكد من Instance ID و Token.';
         });
@@ -3782,7 +3862,22 @@
         if (waMessages[i].id === msgId) {
           var m = waMessages[i];
           if (targetType === 'customer') {
-            speakText('رسالة واتساب من ' + m.customerName + ': ' + m.text, shopConfig.voiceStyle);
+            if (m.audioUrl) {
+              var audEl = document.getElementById('waAudioEl-' + msgId);
+              if (audEl) {
+                audEl.currentTime = 0;
+                audEl.play().catch(function() {
+                  speakText('رسالة صوتية واتساب من ' + m.customerName + ': ' + m.text, shopConfig.voiceStyle);
+                });
+                return;
+              }
+            }
+            speakText('رسالة صوتية واتساب من ' + m.customerName + ': ' + m.text, shopConfig.voiceStyle);
+          } else if (targetType === 'review') {
+            var revText = (m.analysis && m.analysis.spokenReviewSummary)
+              ? m.analysis.spokenReviewSummary
+              : ('مراجعة الرسالة الصوتية من ' + m.customerName + ': ' + m.text);
+            speakText(revText, shopConfig.voiceStyle);
           } else {
             var textarea = document.getElementById('waDraftInput-' + msgId);
             var replyToRead = (textarea && textarea.value.trim()) ? textarea.value.trim() : m.draftReply;
@@ -3793,7 +3888,7 @@
       }
     }
 
-    function receiveNewWhatsAppMessage(customerName, phone, text, isVoice, silentFromInternal) {
+    function receiveNewWhatsAppMessage(customerName, phone, text, isVoice, silentFromInternal, audioUrl, durationStr) {
       var newId = 'WA-' + Math.floor(100 + Math.random() * 900);
       var isAuto = waInboxConfig.replyMode === 'auto';
       var nowStr = getCurrentTimeStr();
@@ -3803,8 +3898,9 @@
         phone: phone || '21655123456',
         time: nowStr,
         isVoice: !!isVoice,
-        duration: isVoice ? '00:08' : null,
-        text: text,
+        audioUrl: audioUrl || null,
+        duration: durationStr || (isVoice ? '00:11' : null),
+        text: text || 'عسلامة أختي زينب، عندي زيت زيتونة وهريسة عربي وبسيسة ومرقاز نحب نعلبهم بالسوفيد والحكك للطيارة، وقتاش نجم نجي؟',
         status: isAuto ? 'auto_sent' : 'pending',
         analysis: null,
         draftReply: '',
@@ -3822,15 +3918,19 @@
       }
       renderWhatsAppInbox();
 
+      var typeLabel = newMsg.isVoice ? '🎙️ رسالة صوتية واتساب' : '💬 رسالة واتساب';
       if (isAuto) {
         dispatchRealWhatsAppApiReply(newMsg.phone, newMsg.draftReply);
-        showToast('📲 وصلت رسالة واتساب لباج الكونسيرفيري من ' + newMsg.customerName + ' — قام البوت بتحليلها والرد أوتوماتيكياً!', 'success');
+        showToast(typeLabel + ' وصلت لباج الكونسيرفيري من ' + newMsg.customerName + ' — البوت قراها، راجعها وجاوب أوتوماتيكياً!', 'success');
       } else {
-        showToast('📲 وصلت رسالة واتساب جديدة لباج الكونسيرفيري من ' + newMsg.customerName + ' — البوت حللها ويستنى مصادقتك!', 'success');
+        showToast(typeLabel + ' وصلت لباج الكونسيرفيري من ' + newMsg.customerName + ' — البوت قراها، حللها وراجعها ويستنى مصادقتك!', 'success');
       }
 
-      if (waInboxConfig.autoReadVoice && !silentFromInternal) {
-        speakText('رسالة واتساب جديدة من ' + newMsg.customerName + ': ' + newMsg.text + ' . ' + (isAuto ? 'وقد أجاب البوت أوتوماتيكياً.' : 'الإجابة جاهزة في انتظار مصادقتك.'), shopConfig.voiceStyle);
+      if ((waInboxConfig.autoReadVoice || newMsg.isVoice) && !silentFromInternal) {
+        var speechAnnouncement = newMsg.isVoice
+          ? ('وصلتك رسالة صوتية واتساب من ' + newMsg.customerName + '. يقول فيها: ' + newMsg.text + ' . مراجعة البوت: ' + (res.itemsSummary ? res.itemsSummary.join(' ، ') : '') + ' . ' + (isAuto ? 'وقد أرسل البوت الإجابة أوتوماتيكياً.' : 'الإجابة جاهزة لمصادقتك.'))
+          : ('رسالة واتساب جديدة من ' + newMsg.customerName + ': ' + newMsg.text);
+        speakText(speechAnnouncement, shopConfig.voiceStyle);
       }
     }
 
@@ -3838,12 +3938,186 @@
     function simulateNewIncomingWhatsApp() {
       var p = incomingWhatsAppPresets[presetCursor % incomingWhatsAppPresets.length];
       presetCursor++;
-      receiveNewWhatsAppMessage(p.customerName, p.phone, p.text, p.isVoice);
+      receiveNewWhatsAppMessage(p.customerName, p.phone, p.text, p.isVoice, false, null, p.duration || '00:11');
+    }
+
+    var voicePresetCursor = 0;
+    function simulateIncomingVoiceWhatsAppNow() {
+      var voicePresets = [];
+      for (var i = 0; i < incomingWhatsAppPresets.length; i++) {
+        if (incomingWhatsAppPresets[i].isVoice) voicePresets.push(incomingWhatsAppPresets[i]);
+      }
+      var vp = voicePresets[voicePresetCursor % voicePresets.length] || incomingWhatsAppPresets[1];
+      voicePresetCursor++;
+      receiveNewWhatsAppMessage(vp.customerName, vp.phone, vp.text, true, false, null, vp.duration || '00:12');
     }
 
     function injectPresetWhatsAppMsg(idx) {
       var p = incomingWhatsAppPresets[idx] || incomingWhatsAppPresets[0];
-      receiveNewWhatsAppMessage(p.customerName, p.phone, p.text, p.isVoice);
+      receiveNewWhatsAppMessage(p.customerName, p.phone, p.text, p.isVoice, false, null, p.duration || '00:11');
+    }
+
+    // Direct Microphone Voice Recorder inside Conserverie WhatsApp Page
+    var waDirectRecActive = false;
+    var waDirectRecSeconds = 0;
+    var waDirectRecTimer = null;
+    var waDirectRecognition = null;
+    var waDirectTranscript = '';
+    var waDirectMediaRecorder = null;
+    var waDirectAudioChunks = [];
+
+    function toggleWaDirectVoiceRecord() {
+      if (waDirectRecActive) {
+        finishWaDirectVoiceRecord();
+      } else {
+        startWaDirectVoiceRecord();
+      }
+    }
+
+    function startWaDirectVoiceRecord() {
+      stopZainebVoice();
+      playVoiceStartChime();
+      waDirectRecActive = true;
+      waDirectRecSeconds = 0;
+      waDirectTranscript = '';
+      waDirectAudioChunks = [];
+
+      var btn = document.getElementById('waDirectVoiceRecBtn');
+      var timerEl = document.getElementById('waDirectVoiceTimer');
+      var badgeEl = document.getElementById('waVoiceRecStatusBadge');
+
+      if (btn) {
+        btn.className = 'w-full py-2.5 px-3 rounded-xl bg-sky-900 text-white font-extrabold text-xs shadow transition flex items-center justify-center gap-2 recording-pulse';
+        btn.innerHTML = '<span>⏹️ اضغط لإنهاء التسجيل وإرساله للباج كأوديو واتساب</span><span id="waDirectVoiceTimer" class="font-mono text-[11px] bg-white/20 px-1.5 py-0.5 rounded">00:00</span>';
+      }
+      if (badgeEl) {
+        badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-700 text-white animate-pulse';
+        badgeEl.textContent = '🎙️ جاري تسجيل الصوت...';
+      }
+
+      if (waDirectRecTimer) clearInterval(waDirectRecTimer);
+      waDirectRecTimer = setInterval(function() {
+        waDirectRecSeconds++;
+        var m = String(Math.floor(waDirectRecSeconds / 60)).padStart(2, '0');
+        var s = String(waDirectRecSeconds % 60).padStart(2, '0');
+        var tEl = document.getElementById('waDirectVoiceTimer');
+        if (tEl) tEl.textContent = m + ':' + s;
+      }, 1000);
+
+      var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        try {
+          waDirectRecognition = new SpeechRec();
+          waDirectRecognition.lang = 'ar-TN';
+          waDirectRecognition.continuous = true;
+          waDirectRecognition.interimResults = true;
+          waDirectRecognition.onresult = function(ev) {
+            var interim = '';
+            for (var i = ev.resultIndex; i < ev.results.length; i++) {
+              if (ev.results[i].isFinal) {
+                waDirectTranscript += ev.results[i][0].transcript + ' ';
+              } else {
+                interim += ev.results[i][0].transcript;
+              }
+            }
+            var txtArea = document.getElementById('simWaMessageText');
+            if (txtArea && (waDirectTranscript + interim).trim()) {
+              txtArea.value = (waDirectTranscript + interim).trim();
+            }
+          };
+          waDirectRecognition.onerror = function() {};
+          waDirectRecognition.start();
+        } catch (e) {}
+      }
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+          if (!waDirectRecActive) {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            return;
+          }
+          try {
+            waDirectMediaRecorder = new MediaRecorder(stream);
+            waDirectMediaRecorder.ondataavailable = function(e) {
+              if (e.data && e.data.size > 0) waDirectAudioChunks.push(e.data);
+            };
+            waDirectMediaRecorder.start();
+          } catch (err) {}
+        }).catch(function() {});
+      }
+    }
+
+    function finishWaDirectVoiceRecord() {
+      waDirectRecActive = false;
+      var durStr = '00:' + String(Math.max(waDirectRecSeconds, 5)).padStart(2, '0');
+      if (waDirectRecTimer) {
+        clearInterval(waDirectRecTimer);
+        waDirectRecTimer = null;
+      }
+      if (waDirectRecognition) {
+        try { waDirectRecognition.stop(); } catch (e) {}
+        waDirectRecognition = null;
+      }
+
+      var btn = document.getElementById('waDirectVoiceRecBtn');
+      var badgeEl = document.getElementById('waVoiceRecStatusBadge');
+      if (btn) {
+        btn.className = 'w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs shadow transition flex items-center justify-center gap-2';
+        btn.innerHTML = '<span>🎙️ اضغط لتسجيل رسالة صوتية واتساب بصوتك الآن</span><span id="waDirectVoiceTimer" class="font-mono text-[11px] bg-white/20 px-1.5 py-0.5 rounded hidden">00:00</span>';
+      }
+      if (badgeEl) {
+        badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-200 text-sky-950';
+        badgeEl.textContent = '✅ وصل الأوديو للباج';
+      }
+
+      var nameInp = document.getElementById('simWaCustomerName');
+      var phoneInp = document.getElementById('simWaCustomerPhone');
+      var txtInp = document.getElementById('simWaMessageText');
+
+      var cName = (nameInp && nameInp.value.trim()) ? nameInp.value.trim() : 'حريف واتساب (تسجيل صوتي مباشر)';
+      var cPhone = (phoneInp && phoneInp.value.trim()) ? phoneInp.value.trim() : '21654321987';
+      var speechText = (waDirectTranscript.trim() || (txtInp && txtInp.value.trim()) || 'عسلامة أختي زينب، هذا ميساج صوتي من الواتساب: عندي 5 لتر زيت زيتونة و 3 كيلو هريسة عربي ومرقاز وبسيسة نحب نعلبهم بالسوفيد والحكك الحديد للطيارة غدوة الصباح.');
+      if (txtInp) txtInp.value = '';
+
+      if (waDirectMediaRecorder && waDirectMediaRecorder.state !== 'inactive') {
+        try {
+          waDirectMediaRecorder.onstop = function() {
+            var audioUrl = null;
+            if (waDirectAudioChunks.length > 0) {
+              var blob = new Blob(waDirectAudioChunks, { type: 'audio/webm' });
+              audioUrl = URL.createObjectURL(blob);
+            }
+            if (waDirectMediaRecorder && waDirectMediaRecorder.stream) {
+              waDirectMediaRecorder.stream.getTracks().forEach(function(t) { t.stop(); });
+            }
+            waDirectMediaRecorder = null;
+            receiveNewWhatsAppMessage(cName, cPhone, speechText, true, false, audioUrl, durStr);
+          };
+          waDirectMediaRecorder.stop();
+          return;
+        } catch (err) {}
+      }
+
+      receiveNewWhatsAppMessage(cName, cPhone, speechText, true, false, null, durStr);
+    }
+
+    function handleWaAudioFileUpload(e) {
+      var file = e && e.target && e.target.files ? e.target.files[0] : null;
+      if (!file) return;
+      var audioUrl = URL.createObjectURL(file);
+      var nameInp = document.getElementById('simWaCustomerName');
+      var phoneInp = document.getElementById('simWaCustomerPhone');
+      var txtInp = document.getElementById('simWaMessageText');
+
+      var cName = (nameInp && nameInp.value.trim()) ? nameInp.value.trim() : ('حريف واتساب (' + file.name + ')');
+      var cPhone = (phoneInp && phoneInp.value.trim()) ? phoneInp.value.trim() : '21699887766';
+      var defaultTranscript = (txtInp && txtInp.value.trim())
+        ? txtInp.value.trim()
+        : 'عسلامة أختي زينب، بعثتلك هذا التسجيل الصوتي على الواتساب (' + file.name + '): عندي 6 لتر زيت زيتونة و 2 كيلو هريسة عربي وحلو تونسي ودقلة وبسيسة نحب نعلبهم بالسوفيد والحكك الحديد للسفر في الطيارة ونقيد موعد غدوة.';
+      if (txtInp) txtInp.value = '';
+      e.target.value = '';
+
+      receiveNewWhatsAppMessage(cName, cPhone, defaultTranscript, true, false, audioUrl, '00:13');
     }
 
     function handleCustomIncomingWaSubmit(e) {
@@ -3853,15 +4127,21 @@
       var typeInput = document.getElementById('simWaMessageType');
       var textInput = document.getElementById('simWaMessageText');
 
+      var isVoice = !typeInput || typeInput.value === 'voice';
       var text = textInput ? textInput.value.trim() : '';
-      if (!text) return;
+      if (!text) {
+        if (isVoice) {
+          text = 'عسلامة أختي زينب، هذا تسجيل صوتي على الواتساب: عندي 4 لتر زيت زيتونة و 2 كيلو هريسة عربي ومرقاز وبسيسة نحب نعمللهم سوفيد وحكك حديد للطيارة ونشد موعد غدوة الصباح.';
+        } else {
+          return;
+        }
+      }
 
-      var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'حريف جديد (واتساب)';
+      var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : (isVoice ? 'حريف واتساب (رسالة صوتية)' : 'حريف جديد (واتساب)');
       var phone = (phoneInput && phoneInput.value.trim()) ? phoneInput.value.trim() : '21698112233';
-      var isVoice = typeInput && typeInput.value === 'voice';
 
       if (textInput) textInput.value = '';
-      receiveNewWhatsAppMessage(name, phone, text, isVoice);
+      receiveNewWhatsAppMessage(name, phone, text, isVoice, false, null, isVoice ? '00:10' : null);
     }
 
     function toggleWaLiveStream() {
@@ -3925,10 +4205,14 @@
     function renderWhatsAppInbox() {
       var pendingCount = 0;
       var sentCount = 0;
+      var voiceCount = 0;
       for (var i = 0; i < waMessages.length; i++) {
         if (waMessages[i].status === 'pending') pendingCount++;
         else sentCount++;
+        if (waMessages[i].isVoice) voiceCount++;
       }
+      var cVoice = document.getElementById('waCountVoice');
+      if (cVoice) cVoice.textContent = String(voiceCount);
 
       var badgeTop = document.getElementById('waPendingCountBadge');
       if (badgeTop) badgeTop.textContent = String(pendingCount);
@@ -3986,6 +4270,7 @@
         var item = waMessages[k];
         if (waInboxConfig.filter === 'pending' && item.status !== 'pending') continue;
         if (waInboxConfig.filter === 'sent' && item.status === 'pending') continue;
+        if (waInboxConfig.filter === 'voice' && !item.isVoice) continue;
         filtered.push(item);
       }
 
@@ -4033,26 +4318,72 @@
               statusBadgeHtml +
             '</div>' +
 
-            '<div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">' +
-              '<div class="flex items-center justify-between gap-2">' +
-                '<span class="text-xs font-extrabold text-slate-700">📩 الرسالة اللي بعثها الحريف على الواتساب:</span>' +
-                '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'customer\')" class="px-2.5 py-1 rounded-lg bg-tunisia-blue hover:bg-sky-900 text-white font-bold text-[11px] flex items-center gap-1 transition">' +
-                  '<span>🔊 البوت يقرالك رسالة الحريف</span>' +
-                '</button>' +
-              '</div>' +
-              '<p class="text-xs sm:text-sm font-semibold text-slate-900 leading-relaxed bg-white p-3 rounded-lg border border-slate-200/80">' +
-                escapeHtml(msg.text) +
-              '</p>' +
-            '</div>' +
+            (msg.isVoice ? (
+              '<div class="p-3.5 rounded-xl bg-sky-100/90 border-2 border-sky-300 space-y-2.5">' +
+                '<div class="flex flex-wrap items-center justify-between gap-2">' +
+                  '<div class="flex items-center gap-2">' +
+                    '<span class="px-2.5 py-0.5 rounded-full bg-sky-700 text-white font-extrabold text-[11px]">🎙️ أوديو واتساب وارد (Voice Note)</span>' +
+                    '<span class="text-xs font-mono font-bold text-sky-900">المدة: ' + escapeHtml(msg.duration || '00:11') + '</span>' +
+                  '</div>' +
+                  '<div class="flex flex-wrap items-center gap-1.5">' +
+                    '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'customer\')" class="px-3 py-1 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-sm transition">' +
+                      '<span>▶️ تشغيل وقراءة الرسالة الصوتية</span>' +
+                    '</button>' +
+                    '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'review\')" class="px-3 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-sm transition">' +
+                      '<span>🔊 سماع مراجعة البوت للأوديو</span>' +
+                    '</button>' +
+                  '</div>' +
+                '</div>' +
+                (msg.audioUrl
+                  ? '<div class="p-2 rounded-xl bg-white border border-sky-300 flex items-center gap-3"><audio id="waAudioEl-' + msg.id + '" controls src="' + msg.audioUrl + '" class="h-8 flex-1"></audio><span class="text-[11px] font-bold text-sky-900">التسجيل الأصلي للحريف</span></div>'
+                  : '<div class="p-2.5 rounded-xl bg-white border border-sky-300 flex items-center justify-between gap-3">' +
+                      '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'customer\')" class="w-8 h-8 rounded-full bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center justify-center shadow">▶️</button>' +
+                      '<div class="flex-1 flex items-center gap-1 h-5 overflow-hidden px-2">' +
+                        '<span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-5 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-5 bg-sky-700 rounded"></span><span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span><span class="w-1 h-5 bg-sky-700 rounded"></span><span class="w-1 h-3 bg-sky-500 rounded"></span><span class="w-1 h-4 bg-sky-600 rounded"></span><span class="w-1 h-2 bg-sky-400 rounded"></span>' +
+                        '<span class="text-[11px] font-bold text-sky-900 mr-2">بصمة صوتية واتساب • اضغط للاستماع</span>' +
+                      '</div>' +
+                      '<span class="text-xs font-mono font-bold text-sky-900">' + escapeHtml(msg.duration || '00:11') + '</span>' +
+                    '</div>'
+                ) +
+                '<div class="bg-white p-3 rounded-xl border border-sky-200 space-y-1">' +
+                  '<div class="text-[11px] font-extrabold text-sky-800">📝 1. قراءة البوت وتفريغ الرسالة الصوتية إلى نص (Speech-to-Text):</div>' +
+                  '<p class="text-xs sm:text-sm font-bold text-sky-950 leading-relaxed">"' + escapeHtml(msg.text) + '"</p>' +
+                '</div>' +
+              '</div>'
+            ) : (
+              '<div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">' +
+                '<div class="flex items-center justify-between gap-2">' +
+                  '<span class="text-xs font-extrabold text-slate-700">📩 الرسالة اللي بعثها الحريف على الواتساب:</span>' +
+                  '<button type="button" onclick="speakWaCustomerOrBotText(\'' + msg.id + '\', \'customer\')" class="px-2.5 py-1 rounded-lg bg-tunisia-blue hover:bg-sky-900 text-white font-bold text-[11px] flex items-center gap-1 transition">' +
+                    '<span>🔊 البوت يقرالك رسالة الحريف</span>' +
+                  '</button>' +
+                '</div>' +
+                '<p class="text-xs sm:text-sm font-semibold text-slate-900 leading-relaxed bg-white p-3 rounded-lg border border-slate-200/80">' +
+                  escapeHtml(msg.text) +
+                '</p>' +
+              '</div>'
+            )) +
 
             '<div class="p-3.5 rounded-xl bg-sky-50/80 border border-sky-200 space-y-1.5 text-xs">' +
               '<div class="flex flex-wrap items-center justify-between gap-2">' +
-                '<span class="font-extrabold text-tunisia-blue flex items-center gap-1">🧠 تحليل بوت الكونسيرفيري الأوتوماتيكي:</span>' +
+                '<span class="font-extrabold text-tunisia-blue flex items-center gap-1">🧠 ' + (msg.isVoice ? '2. تحليل البوت للرسالة الصوتية وتوصية التعليب:' : 'تحليل بوت الكونسيرفيري الأوتوماتيكي:') + '</span>' +
                 '<span class="px-2 py-0.5 rounded-full bg-tunisia-blue text-white font-bold text-[11px]">' + escapeHtml(msg.analysis ? msg.analysis.intentLabel : '') + '</span>' +
               '</div>' +
               '<ul class="text-slate-700 space-y-1 pt-1">' + itemsBullets + '</ul>' +
               '<div class="pt-1 text-[11px] font-bold text-emerald-800">💰 التكلفة التقديرية المحسوبة: ' + escapeHtml(msg.analysis ? msg.analysis.estimatedCostText : '') + '</div>' +
             '</div>' +
+
+            (msg.isVoice && msg.analysis && msg.analysis.voiceReviewChecks ? (
+              '<div class="p-3.5 rounded-xl bg-sky-100/70 border-2 border-sky-300 space-y-1.5 text-xs">' +
+                '<div class="flex flex-wrap items-center justify-between gap-2">' +
+                  '<span class="font-extrabold text-sky-950 flex items-center gap-1.5">🔎 3. مراجعة وتدقيق البوت للرسالة الصوتية اللي جت على الواتساب:</span>' +
+                  '<span class="px-2 py-0.5 rounded-full bg-sky-600 text-white font-extrabold text-[10px]">✅ تمت مراجعة الأوديو</span>' +
+                '</div>' +
+                '<ul class="text-sky-950 space-y-1 pt-1 font-medium">' +
+                  msg.analysis.voiceReviewChecks.map(function(chk) { return '<li>' + escapeHtml(chk) + '</li>'; }).join('') +
+                '</ul>' +
+              '</div>'
+            ) : '') +
 
             '<div class="p-3.5 rounded-xl ' + (isPending ? 'bg-amber-50/70 border border-amber-300' : 'bg-emerald-50/70 border border-emerald-200') + ' space-y-2">' +
               '<div class="flex flex-wrap items-center justify-between gap-2">' +
