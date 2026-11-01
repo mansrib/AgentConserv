@@ -41,8 +41,8 @@ def load_database():
             "name": "محل زينب العزيزي لتعليب المأكولات التونسية",
             "whatsapp": "21698123456",
             "address": "بن عروس / تونس الكبرى",
-            "weekday_hours": "08:30 ص – 07:30 م",
-            "saturday_hours": "08:30 ص – 05:00 م",
+            "weekday_hours": "الصباح 08:00 – 11:00 والعشية 14:00 – 17:00",
+            "saturday_hours": "الصباح 08:00 – 11:00 والعشية 14:00 – 17:00",
             "reply_mode": "approval",
             "reply_format": "voice"
         },
@@ -342,7 +342,7 @@ def analyze_tunisian_food_message(customer_name, text):
         reply_lines.append("مرحبا بيك! قلي شنوة السلعة والكمية اللي عندك بالضبط باش نحسبلك السوم ونحضرهالك.")
 
     reply_lines.append(
-        f"المحل محلول في {cfg.get('address', 'بن عروس')} من الإثنين للجمعة ({cfg.get('weekday_hours', '08:30 ص – 07:30 م')}). قلي وقتاش يساعدك تجي باش نقيدلك موعدك!"
+        f"المحل محلول في {cfg.get('address', 'بن عروس')} من الإثنين للجمعة ({cfg.get('weekday_hours', 'الصباح 08:00 – 11:00 والعشية 14:00 – 17:00')}). قلي وقتاش يساعدك تجي باش نقيدلك موعدك!"
     )
     suggested_reply = "\n".join(reply_lines)
     spoken_reply = convert_text_to_pure_tunisian_arabic_speech(suggested_reply)
