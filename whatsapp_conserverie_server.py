@@ -146,6 +146,32 @@ def convert_text_to_pure_tunisian_arabic_speech(text):
 # ---------------------------------------------------------------------------
 # 3. تفريغ الفيديوهات والأوديو إلى نص عربي مطابق 100% (Audio/Video Speech-to-Text)
 # ---------------------------------------------------------------------------
+
+def correct_tunisian_derja_asr(raw_text):
+    """تصحيح أخطاء التفريغ الصوتي الآلي للكلمات التونسية الدارجة الخاصة بالتعليب والمأكولات."""
+    s = str(raw_text or "").strip()
+    replacements = [
+        (r"سوف يدي|سو فيد|سوف يت|سفيد|سعيد", "سوفيد"),
+        (r"حكاك|حقك|حكايات", "حكك"),
+        (r"حكه", "حكة"),
+        (r"نصف رطب|نص رطب|نصف رطل", "نص رطل"),
+        (r"رطب|بطل", "رطل"),
+        (r"ثلاثة آلاف وخمسمئة|ثلاثه الاف وخمسميه|ثلاثة آلاف وخمسمية|3,500", "3500"),
+        (r"ألفين وخمسمئة|الفين وخمسميه|ألفين وخمسمية|2,500", "2500"),
+        (r"ألفين|الفين|2,000", "2000"),
+        (r"مركاز|مرجاز|مرقاص", "مرقاز"),
+        (r"بسبوسة|بسبوسه|بسيسه", "بسيسة"),
+        (r"دجلة|دجله|دقله", "دقلة"),
+        (r"كسروله|كسرولة|كاسرونه|كاسرونة|كسرونه", "كسرونة"),
+        (r"مكملين|مكنجلين", "مكنجلين"),
+        (r"مكمل|مكنش", "مكنجل"),
+        (r"القائله|القائلة|القايله", "القايلة"),
+        (r"بوابه|بوابة", "بواتة"),
+    ]
+    for pat, rep in replacements:
+        s = re.sub(pat, rep, s)
+    return re.sub(r"\s+", " ", s).strip()
+
 def transcribe_video_or_audio_file(file_path):
     """
     يستخرج الصوت من ملف الفيديو (.mp4/.webm/.mov) أو الأوديو (.ogg/.mp3/.wav)
@@ -170,7 +196,7 @@ def transcribe_video_or_audio_file(file_path):
                 audio_data = recognizer.record(source)
             text = recognizer.recognize_google(audio_data, language="ar-TN")
             if text and text.strip():
-                return {"success": True, "transcript": text.strip(), "engine": "Google-Speech-ar-TN"}
+                return {"success": True, "transcript": correct_tunisian_derja_asr(text), "engine": "Google-Speech-ar-TN"}
         except Exception:
             pass
 
@@ -181,7 +207,7 @@ def transcribe_video_or_audio_file(file_path):
             result = model.transcribe(target_audio, language="ar")
             text = result.get("text", "").strip()
             if text:
-                return {"success": True, "transcript": text, "engine": "Whisper-Arabic"}
+                return {"success": True, "transcript": correct_tunisian_derja_asr(text), "engine": "Whisper-Arabic"}
         except Exception:
             pass
 
