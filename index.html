@@ -1475,7 +1475,31 @@
         [/كغ/g, 'kilo ']
       ];
 
-      var s = String(arabicText || '').replace(/[*_#`~•]/g, ' ');
+      var s = convertAllNumbersAndLatinToTunisianArabic(
+        String(arabicText || '')
+          .replace(/[*_#`~•←→]/g, ' ')
+          .replace(/د\.ت/g, ' دينار تونسي ')
+          .replace(/كغ/g, ' كيلو ')
+      );
+      var numberWordReplacements = [
+        [/صْفِرْ/g, 'sfir '], [/وَاحِدْ/g, 'wahed '], [/ثْنِينْ/g, 'thnin '], [/زُوزْ/g, 'zouz '],
+        [/ثْلَاثَة/g, 'thletha '], [/أَرْبْعَة/g, 'arbaa '], [/خَمْسَة/g, 'khamsa '],
+        [/سِتَّة/g, 'setta '], [/سَبْعَة/g, 'sabaa '], [/ثْمَانْيَة/g, 'thmenya '],
+        [/تِسْعَة/g, 'tesaa '], [/عَشْرَة/g, 'achra '], [/حْدَاشْ/g, 'hdach '],
+        [/ثْنَاشْ/g, 'thnach '], [/ثْلَطَّاشْ/g, 'thlattach '], [/أَرْبَعْطَاشْ/g, 'arbaatach '],
+        [/خْمُسْطَاشْ/g, 'khmostach '], [/سِتَّاشْ/g, 'settach '], [/سْبَعْطَاشْ/g, 'sbaatach '],
+        [/ثْمَنْطَاشْ/g, 'thmantach '], [/تْسَعْطَاشْ/g, 'tsaatach '],
+        [/عِشْرِينْ/g, 'echrin '], [/ثْلَاثِينْ/g, 'thlethin '], [/أَرْبْعِينْ/g, 'arbiin '],
+        [/خَمْسِينْ/g, 'khamsin '], [/سِتِّينْ/g, 'settin '], [/سَبْعِينْ/g, 'sabiin '],
+        [/ثْمَانِينْ/g, 'thmenin '], [/تِسْعِينْ/g, 'tesiin '], [/مِيَّة/g, 'miya '],
+        [/مِيتِينْ/g, 'mitin '], [/فِي الْمِيَّة/g, 'fil miya '], [/وَنُصّ/g, 'w noss '],
+        [/الثَّمْنْيَة/g, 'el thmenya '], [/السَّبْعَة/g, 'el sabaa '], [/الخَمْسَة/g, 'el khamsa '],
+        [/التِّسْعَة/g, 'el tesaa '], [/المَاضِي سَاعَة/g, 'el madhi saa '],
+        [/دِينَارْ تُونْسِي/g, 'dinar tounsi '], [/دِيناراتْ/g, 'dinawat '], [/دْقِيقَة/g, 'dkika ']
+      ];
+      for (var nIdx = 0; nIdx < numberWordReplacements.length; nIdx++) {
+        s = s.replace(numberWordReplacements[nIdx][0], numberWordReplacements[nIdx][1]);
+      }
       for (var i = 0; i < phraseReplacements.length; i++) {
         s = s.replace(phraseReplacements[i][0], phraseReplacements[i][1]);
       }
@@ -2156,8 +2180,19 @@
         }
       }
 
-      // 5. Even if no local Arabic voice is listed yet, return null voice with usePhoneticLatin: false so utter.lang = 'ar-TN' is used!
-      return { voice: null, usePhoneticLatin: false, femalePitch: 1.15 };
+      // 5. If the OS has NO Arabic voice (ar-*) installed at all, sending Arabic letters [ء-ي] to speechSynthesis produces silence!
+      // Instead, pick the best installed female voice and use Tunisian phonetic Derja (where ALL numbers are converted to Tunisian words like zouz, thletha w noss, khamsa) so audio is 100% audible and numbers are NEVER spoken in French!
+      var bestFallbackVoice = null;
+      for (var k = 0; k < voices.length; k++) {
+        if (!isMaleVoiceName(voices[k].name)) {
+          bestFallbackVoice = voices[k];
+          if (isFemaleVoiceName(voices[k].name)) break;
+        }
+      }
+      if (!bestFallbackVoice && voices.length > 0) {
+        bestFallbackVoice = voices[0];
+      }
+      return { voice: bestFallbackVoice, usePhoneticLatin: true, femalePitch: 1.18 };
     }
 
     // Core 4-Layer Guaranteed-Audible Speech Engine
@@ -2221,11 +2256,11 @@
           var rate = parseFloat(shopConfig.voiceRate) || 1.0;
           for (var k = 0; k < chunks.length; k++) {
             var utter = new SpeechSynthesisUtterance(chunks[k]);
-            if (strategy.voice && strategy.voice.lang && strategy.voice.lang.toLowerCase().indexOf('ar') === 0) {
+            if (strategy.voice) {
               utter.voice = strategy.voice;
-              utter.lang = strategy.voice.lang;
+              utter.lang = strategy.voice.lang || (strategy.usePhoneticLatin ? 'fr-FR' : 'ar-TN');
             } else {
-              utter.lang = 'ar-TN';
+              utter.lang = strategy.usePhoneticLatin ? 'fr-FR' : 'ar-TN';
             }
             utter.rate = rate;
             utter.pitch = strategy.femalePitch || 1.24;
@@ -4474,15 +4509,81 @@
 
       var cName = (nameInp && nameInp.value.trim()) ? nameInp.value.trim() : ('حريف واتساب (' + file.name + ')');
       var cPhone = (phoneInp && phoneInp.value.trim()) ? phoneInp.value.trim() : '21699887766';
-      var cleanBaseName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
-      var exactTranscript = (txtInp && txtInp.value.trim())
-        ? txtInp.value.trim()
-        : (/[\u0600-\u06FF]/.test(cleanBaseName) ? cleanBaseName : 'عسلامة أختي زينب، بعثتلك هذا التسجيل على الواتساب، نحب نعلب سلعتي بالسوفيد والحكك الحديد ونقيد موعد في المحل.');
+      var userEnteredText = (txtInp && txtInp.value.trim()) ? txtInp.value.trim() : '';
       if (txtInp) txtInp.value = '';
       e.target.value = '';
 
-      receiveNewWhatsAppMessage(cName, cPhone, exactTranscript, true, false, mediaUrl, '00:12', isVideoFile);
-      showToast('📎 وصل ملف الحريف (' + file.name + ')! تنجم تعدل نص التفريغ مباشرة في البطاقة باش يطابق كل كلمة في الأوديو/الفيديو 100%.', 'success');
+      var initialText = userEnteredText || ('[فيديو/أوديو مرفوع: ' + file.name + ' — جاري الاستماع والتفريغ الصوتي... أو اكتب محتوى الفيديو في خانة التفريغ أسفله]');
+      var newMsgId = 'WA-' + Math.floor(100 + Math.random() * 900);
+      var nowStr = getCurrentTimeStr();
+      var newMsg = {
+        id: newMsgId,
+        customerName: cName,
+        phone: cPhone,
+        time: nowStr,
+        isVoice: true,
+        isVideo: isVideoFile,
+        audioUrl: mediaUrl,
+        duration: '00:12',
+        text: initialText,
+        replyFormat: waInboxConfig.replyFormat || 'voice',
+        replyAudioUrl: null,
+        status: 'pending',
+        analysis: null,
+        draftReply: '',
+        sentAt: null
+      };
+      var res = buildWaBotAnalysisAndReply(newMsg);
+      newMsg.analysis = res;
+      newMsg.draftReply = res.suggestedReply;
+      waMessages.unshift(newMsg);
+      persistWaInboxState();
+      renderWhatsAppInbox();
+
+      // Auto-play the uploaded video/audio and run live SpeechRecognition (ar-TN) to capture its speech if user didn't pre-fill text
+      if (!userEnteredText) {
+        var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var mediaEl = document.getElementById('waAudioEl-' + newMsgId);
+        if (SR && mediaEl) {
+          try {
+            var fileRec = new SR();
+            fileRec.lang = 'ar-TN';
+            fileRec.continuous = true;
+            fileRec.interimResults = true;
+            var captured = '';
+            fileRec.onresult = function(ev) {
+              var fin = '';
+              var inter = '';
+              for (var r = 0; r < ev.results.length; r++) {
+                if (ev.results[r].isFinal) fin += ev.results[r][0].transcript + ' ';
+                else inter += ev.results[r][0].transcript + ' ';
+              }
+              captured = (fin + inter).trim();
+              var inpEl = document.getElementById('waTranscriptInput-' + newMsgId);
+              if (inpEl && captured) inpEl.value = captured;
+            };
+            fileRec.onend = function() {
+              if (captured) {
+                updateWaMessageTranscript(newMsgId, captured);
+              }
+            };
+            fileRec.start();
+            mediaEl.play().catch(function() {});
+            mediaEl.onended = function() {
+              try { fileRec.stop(); } catch (err) {}
+            };
+          } catch (err) {}
+        }
+        // Focus the transcript input box so user can immediately see or type the exact words of the video
+        setTimeout(function() {
+          var inpEl = document.getElementById('waTranscriptInput-' + newMsgId);
+          if (inpEl) {
+            inpEl.focus();
+            inpEl.select();
+          }
+        }, 200);
+      }
+      showToast('🎬 تم رفع (' + file.name + ')! إذا المتصفح ما لقطش صوت الفيديو تلقائياً، اكتب الكلام اللي في الفيديو في خانة (التفريغ النصي) واضغط تحديث التحليل.', 'success');
     }
 
     function handleCustomIncomingWaSubmit(e) {

@@ -1,0 +1,169 @@
+{
+  "shop_config": {
+    "name": "محل زينب العزيزي لتعليب المأكولات التونسية",
+    "owner": "زينب العزيزي",
+    "whatsapp": "21698123456",
+    "address": "بن عروس / تونس الكبرى",
+    "weekday_hours": "08:30 ص – 07:30 م",
+    "saturday_hours": "08:30 ص – 05:00 م",
+    "sunday_hours": "مسكر (أولوية للمواعيد المسجلة)",
+    "status": "open",
+    "reply_mode": "approval",
+    "reply_format": "voice",
+    "voice_language": "ar-TN"
+  },
+  "packaging_catalog": [
+    {
+      "id": "liquids_oil_honey",
+      "category_ar": "زيت زيتونة، عسل حر، رب تمر، ماء زهر وعطرشية",
+      "keywords": [
+        "زيت",
+        "عسل",
+        "رب",
+        "زهر",
+        "عطرشية"
+      ],
+      "packaging_method": "بيدون أو حكة حديد غذائية مختومة بالماكينة + تغليف سوفيد مزدوج مانع للتسرب",
+      "baggage_rule": "يتحط في البقاج اللوطة في الطيارة خاطر سوائل تفوت مية مل",
+      "unit_price_tnd": 4.5,
+      "unit_label": "لتر"
+    },
+    {
+      "id": "pastes_harissa_canned",
+      "category_ar": "هريسة عربي، سلطة مشوية، مالح، زيتون، تن، معجون",
+      "keywords": [
+        "هريسة",
+        "مشوية",
+        "مالح",
+        "مرقد",
+        "زيتون",
+        "تن",
+        "معجون"
+      ],
+      "packaging_method": "حكك حديد مسكرة بالماكينة + ساشي سوفيد خارجي عازل للريحة",
+      "baggage_rule": "يتحط في البقاج اللوطة في الطيارة ومضمون مية في المية ضد الضغط",
+      "unit_price_tnd": 3.5,
+      "unit_label": "حكة (1 كيلو)"
+    },
+    {
+      "id": "dry_sous_vide",
+      "category_ar": "بسيسة، دقلة النور، ملوخية غبرة، كسكسي عولة، فحات وتابل، فرماج",
+      "keywords": [
+        "بسيسة",
+        "دقلة",
+        "تمر",
+        "ملوخية",
+        "كسكسي",
+        "عولة",
+        "فحات",
+        "تابل",
+        "كمون",
+        "فرماج",
+        "سوفيد"
+      ],
+      "packaging_method": "ساشيات سوفيد خشينة مسحوبة الهواء تربحك خمسين في المية من البلاصة وتقطع الريحة",
+      "baggage_rule": "يتعدى في بقاج اليد وإلا في البقاج اللوطة",
+      "unit_price_tnd": 2.5,
+      "unit_label": "كيلو"
+    },
+    {
+      "id": "tunisian_sweets",
+      "category_ar": "حلو تونسي، بقلاوة، كعك ورقة، مقروض، غريبة، صمصة",
+      "keywords": [
+        "حلو",
+        "بقلاوة",
+        "كعك",
+        "مقروض",
+        "غريبة",
+        "صمصة",
+        "زلابية"
+      ],
+      "packaging_method": "بواتات يابسة مضادة للفعص + سوفيد خفيف يحفظ القرمشة والشحور",
+      "baggage_rule": "يتعدى في بقاج اليد وإلا في وسط الفاليز",
+      "unit_price_tnd": 4.0,
+      "unit_label": "بواتة"
+    },
+    {
+      "id": "frozen_cooked_meats_seafood",
+      "category_ar": "مرقاز، قديد، حوت وقرنيط كونجلي، عصبان، كمونية، ماكلة طايبة",
+      "keywords": [
+        "مرقاز",
+        "قديد",
+        "حوت",
+        "قرنيط",
+        "عصبان",
+        "كمونية",
+        "كفتاجي",
+        "طايب",
+        "لحم"
+      ],
+      "packaging_method": "سوفيد كونجلي مبطن + ساك إيزوتارم حافظ للبرودة يصبر ثمانية وأربعين ساعة",
+      "baggage_rule": "يتحط في البقاج اللوطة ويلزم يتجاب للمحل بارد أو كونجلي",
+      "unit_price_tnd": 6.0,
+      "unit_label": "باكو"
+    }
+  ],
+  "customers": [
+    {
+      "customer_name": "سناء الماجري",
+      "phone": "21698445566",
+      "messages_count": 1,
+      "voice_notes_count": 0,
+      "last_contact": "17:52",
+      "status": "pending"
+    },
+    {
+      "customer_name": "كريم الجبالي",
+      "phone": "21655998877",
+      "messages_count": 1,
+      "voice_notes_count": 1,
+      "last_contact": "17:58",
+      "status": "pending"
+    },
+    {
+      "customer_name": "نادية بوعزيز",
+      "phone": "21624113355",
+      "messages_count": 1,
+      "voice_notes_count": 0,
+      "last_contact": "18:04",
+      "status": "pending"
+    },
+    {
+      "customer_name": "حمزة الغربي",
+      "phone": "21693221144",
+      "messages_count": 1,
+      "voice_notes_count": 0,
+      "last_contact": "17:30",
+      "status": "auto_sent"
+    }
+  ],
+  "whatsapp_messages": [
+    {
+      "id": "WA-901",
+      "customer_name": "سناء الماجري",
+      "phone": "21698445566",
+      "time": "17:52",
+      "is_voice": false,
+      "is_video": false,
+      "duration": null,
+      "transcript": "عسلامة أختي زينب، عندي 5 لتر زيت زيتونة و 2 كيلو هريسة عربي وسلطة مشوية نحب نعلبهم في حكك حديد وسوفيد للطيارة غدوة، قداش يتكلفوا ومن وقتاش نجم نجي؟",
+      "estimated_total_tnd": 29.5,
+      "reply_format": "voice",
+      "status": "pending"
+    },
+    {
+      "id": "WA-902",
+      "customer_name": "كريم الجبالي",
+      "phone": "21655998877",
+      "time": "17:58",
+      "is_voice": true,
+      "is_video": false,
+      "duration": "00:09",
+      "transcript": "عسلامة زينب العزيزي، هذا ميساج صوتي: عندي 3 كيلو بقلاوة وكعك ورقة و 2 كيلو دقلة وبسيسة نحب نبعثهم لولدي في ألمانيا، شنوة تنصحني؟",
+      "estimated_total_tnd": 17.0,
+      "reply_format": "voice",
+      "status": "pending"
+    }
+  ],
+  "appointments": []
+}
