@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+pydantic
+python-multipart
+Pillow
+edge-tts
+gTTS
+SpeechRecognition
+google-genai
