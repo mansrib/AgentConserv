@@ -21,7 +21,7 @@ import re
 import subprocess
 import tempfile
 from datetime import datetime
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 import urllib.request
 
@@ -423,6 +423,19 @@ class ConserverieRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path in ("/", "/index.html", "/tunisian_packaging_bot.html"):
+            html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tunisian_packaging_bot.html")
+            if os.path.exists(html_file):
+                self._send_cors_headers("text/html; charset=utf-8")
+                with open(html_file, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
+        if parsed.path == "/healthz":
+            self._send_cors_headers("application/json; charset=utf-8")
+            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
+            return
+
         if parsed.path == "/api/database":
             self._send_cors_headers()
             self.wfile.write(json.dumps(load_database(), ensure_ascii=False).encode("utf-8"))
@@ -463,13 +476,48 @@ class ConserverieRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"saved": True}, ensure_ascii=False).encode("utf-8"))
             return
 
+        if parsed.path == "/webhook/whatsapp":
+            try:
+                payload = json.loads(raw_body.decode("utf-8"))
+                db = load_database()
+                msgs = db.get("whatsapp_messages", [])
+                sender_name = payload.get("senderName") or (payload.get("senderData", {}) or {}).get("senderName") or "حريف واتساب"
+                sender_phone = str(payload.get("senderId") or (payload.get("senderData", {}) or {}).get("sender") or "21698123456").replace("@c.us", "")
+                text_msg = (
+                    payload.get("textMessage")
+                    or (payload.get("messageData", {}) or {}).get("textMessageData", {}).get("textMessage")
+                    or payload.get("body")
+                    or ""
+                )
+                text_msg = correct_tunisian_derja_asr(text_msg)
+                if text_msg:
+                    analysis = analyze_tunisian_food_message(sender_name, text_msg)
+                    msgs.insert(0, {
+                        "id": f"WA-{len(msgs) + 901}",
+                        "customer_name": sender_name,
+                        "phone": sender_phone,
+                        "time": datetime.now().strftime("%H:%M"),
+                        "is_voice": False,
+                        "transcript": text_msg,
+                        "bot_analysis": [d["item"] for d in analysis["detected_items"]],
+                        "draft_reply": analysis["suggested_reply"],
+                        "status": "pending"
+                    })
+                    db["whatsapp_messages"] = msgs
+                    save_database(db)
+            except Exception:
+                pass
+            self._send_cors_headers()
+            self.wfile.write(json.dumps({"received": True}, ensure_ascii=False).encode("utf-8"))
+            return
+
         self._send_cors_headers()
         self.wfile.write(json.dumps({"status": "ok"}, ensure_ascii=False).encode("utf-8"))
 
 
 if __name__ == "__main__":
-    port = 5000
-    print(f"🇹🇳 سيرفر محل زينب العزيزي لتعليب المأكولات التونسية يخدم على: http://127.0.0.1:{port}")
+    port = int(os.environ.get("PORT", 5000))
+    print(f"🇹🇳 سيرفر محل زينب العزيزي (Render Ready) يخدم على البورت: {port}")
     print(f"🗄️ قاعدة البيانات متصلة بالملف: {DB_FILE}")
-    server = HTTPServer(("0.0.0.0", port), ConserverieRequestHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", port), ConserverieRequestHandler)
     server.serve_forever()
