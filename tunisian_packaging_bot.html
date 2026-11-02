@@ -1882,7 +1882,7 @@
 
     function loadSavedState() {
       try {
-        var savedCfg = localStorage.getItem('zaineb_packaging_shop_cfg_v6');
+        var savedCfg = localStorage.getItem('zaineb_packaging_shop_cfg_v7');
         if (savedCfg) {
           var parsed = JSON.parse(savedCfg);
           for (var k in parsed) {
@@ -1903,7 +1903,7 @@
 
     function persistState() {
       try {
-        localStorage.setItem('zaineb_packaging_shop_cfg_v6', JSON.stringify(shopConfig));
+        localStorage.setItem('zaineb_packaging_shop_cfg_v7', JSON.stringify(shopConfig));
         localStorage.setItem('zaineb_packaging_appts_v6', JSON.stringify(appointments));
       } catch (e) {}
     }
@@ -2824,149 +2824,97 @@
     }
 
     function analyzeMultiFoodText(userText) {
-      var q = String(userText || '').toLowerCase();
+      var q = correctTunisianDerjaASR(String(userText || '')).toLowerCase();
       var detected = [];
 
-      // If the text explicitly discusses the 3 can sizes & prices (كيلو بـ 3500، رطل بـ 2500، نص رطل بـ 2000)
-      if ((q.indexOf('أحجام') !== -1 || q.indexOf('احجام') !== -1 || q.indexOf('3500') !== -1 || q.indexOf('2500') !== -1 || q.indexOf('2000') !== -1) &&
-          (q.indexOf('رطل') !== -1 || q.indexOf('حكك') !== -1 || q.indexOf('كيلو') !== -1)) {
-        detected.push({
-          item: '🥫 حكة كيلو (1 كغ)',
-          pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
-          baggage: '✈️ مضمونة 100% للسفر في الطيارة',
-          price: '3500 مليم (3.5 د.ت)',
-          unitCost: 3.5,
-          qty: 1,
-          subtotal: 3.5
-        });
-        detected.push({
-          item: '🥫 حكة رطل (500 غ)',
-          pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
-          baggage: '✈️ مضمونة 100% للسفر في الطيارة',
-          price: '2500 مليم (2.5 د.ت)',
-          unitCost: 2.5,
-          qty: 1,
-          subtotal: 2.5
-        });
-        detected.push({
-          item: '🥫 حكة نص رطل (250 غ)',
-          pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
-          baggage: '✈️ مضمونة 100% للسفر في الطيارة',
-          price: '2000 مليم (2.0 د.ت)',
-          unitCost: 2.0,
-          qty: 1,
-          subtotal: 2.0
-        });
+      var catalog = [
+        { rx: /زيت\s*زيتون[ةه]?|زيت(?!ون)/, label: '🫒 زيت زيتونة تونسي', pack: 'حكة حديد غذائية مختومة بالماكينة + تغليف سوفيد مزدوج مانع للتسرب', bag: '✈️ يتحط في البقاج اللوطة (Soute)' },
+        { rx: /عسل/, label: '🍯 عسل حر', pack: 'حكة حديد مختومة بالماكينة + تغليف سوفيد', bag: '✈️ يتحط في البقاج اللوطة (Soute)' },
+        { rx: /\bرب\b/, label: '🍯 رب تمر', pack: 'حكة حديد مختومة بالماكينة + تغليف سوفيد', bag: '✈️ يتحط في البقاج اللوطة (Soute)' },
+        { rx: /زهر|عطرشية/, label: '🌸 ماء زهر / عطرشية', pack: 'حكة حديد مختومة + تغليف سوفيد مانع للتسرب', bag: '✈️ يتحط في البقاج اللوطة (Soute)' },
+        { rx: /هريسة/, label: '🌶️ هريسة عربي', pack: 'حكة حديد مختومة بالماكينة + ساشي سوفيد عازل للريحة', bag: '✈️ يتحط في البقاج اللوطة ومضمون 100%' },
+        { rx: /مشوية/, label: '🥗 سلطة مشوية', pack: 'حكة حديد مختومة بالماكينة + ساشي سوفيد عازل للريحة', bag: '✈️ يتحط في البقاج اللوطة ومضمون 100%' },
+        { rx: /مالح|مرقد|مخلل/, label: '🫒 مالح ومخللات', pack: 'حكة حديد مختومة بالماكينة + سوفيد', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /زيتون(?!\s*حر)(?![ةه])/, label: '🫒 زيتون تونسي', pack: 'حكة حديد مختومة أو سوفيد مسحوب الهواء', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /معجون/, label: '🍓 معجون', pack: 'حكة حديد مختومة بالماكينة', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /بسيسة/, label: '🌾 بسيسة تونسية', pack: 'حكة حديد مختومة أو ساشي سوفيد خشين مسحوب الهواء', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /دقلة|تمر/, label: '🌴 دقلة النور', pack: 'ساشي سوفيد مسحوب الهواء أو حكة مختومة', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /ملوخية/, label: '🌿 ملوخية تونسية', pack: 'حكة حديد مختومة أو سوفيد مزدوج قاطع للريحة', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /كسكسي|عولة|محمص|نواصل/, label: '🌾 كسكسي وعولة', pack: 'ساشي سوفيد خشين مسحوب الهواء يربحك 50% من البلاصة', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /فحات|تابل|كمون|كروية/, label: '🧂 فحات وتابل تونسي', pack: 'ساشي سوفيد مزدوج قاطع للريحة', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /فرماج|جبن/, label: '🧀 فرماج', pack: 'تغليف سوفيد مسحوب الهواء', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /بقلاوة/, label: '🥮 بقلاوة تونسية', pack: 'حكة/بواتة يابسة مضادة للفعص + سوفيد خفيف يحفظ القرمشة', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /كعك/, label: '🥮 كعك ورقة', pack: 'حكة/بواتة يابسة مضادة للفعص + سوفيد خفيف', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /مقروض/, label: '🥮 مقروض', pack: 'حكة مختومة أو بواتة يابسة + سوفيد', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /غريبة/, label: '🥮 غريبة', pack: 'بواتة يابسة مضادة للتفتيت + سوفيد خفيف', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /صمصة|زلابية|حلو تونسي/, label: '🥮 حلو تونسي', pack: 'حكة مختومة أو بواتة يابسة ضد الفعص + سوفيد', bag: '🎒 يتعدى في بقاج اليد أو الفاليز' },
+        { rx: /مرقاز/, label: '🥩 مرقاز تونسي', pack: 'حكة حديد مختومة أو سوفيد (لحم جديد غير مكنجل)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /قديد/, label: '🥩 قديد تونسي', pack: 'حكة حديد مختومة أو سوفيد مضاعف', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /عصبان|كمونية/, label: '🍲 عصبان / كمونية طايبة', pack: 'حكة حديد مختومة (تجي سخونة ملي تطفي عليها وفي نفس الكسرونة)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /مرقة|ماكلة طايبة|شكشوكة|كفتاجي|شخشوخة|جلبانة|قناوية/, label: '🍲 ماكلة طايبة سخونة في كسرونتها', pack: 'حكة حديد مختومة (بمكونات جديدة خاصة حكة الطماطم وبزايد زيت شوية وتجي سخونة في نفس الكسرونة)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /لوبيا/, label: '🫘 لوبيا (منفخة جديدة غير مكنجلة)', pack: 'حكة حديد مختومة (تجي سخونة في نفس الكسرونة)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /حمص/, label: '🫘 حمص (منفخ جديد غير مكنجل)', pack: 'حكة حديد مختومة (تجي سخونة في نفس الكسرونة)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /لحم|علوش|بقري/, label: '🥩 لحم (جديد غير مكنجل)', pack: 'حكة حديد مختومة (بزايد زيت شوية وتجي سخونة في نفس الكسرونة)', bag: '✈️ يتحط في البقاج اللوطة' },
+        { rx: /طماطم/, label: '🍅 حكة طماطم جديدة للطبخ', pack: 'شرط أساسي لنجاح التعليب أن تكون حكة الطماطم جديدة', bag: '✈️ تعليب مضمون 100%' },
+        { rx: /حوت|قرنيط|كلمار|جمبري|سردينة/, label: '🐟 حوت وغلال بحر', pack: 'حكة حديد مختومة أو سوفيد + إيزوتارم', bag: '✈️ يتحط في البقاج اللوطة' }
+      ];
+
+      for (var i = 0; i < catalog.length; i++) {
+        var c = catalog[i];
+        // Ignore 'بزايد زيت' when checking olive oil
+        if (c.label.indexOf('زيت زيتونة') !== -1 && q.indexOf('زيت زيتون') === -1 && q.indexOf('بزايد زيت') !== -1) {
+          continue;
+        }
+        if (c.rx.test(q)) {
+          var qInfo = extractQuantityNearKeyword(q, c.rx);
+          var sub = Math.round(qInfo.qty * qInfo.unitCost * 10) / 10;
+          detected.push({
+            item: c.label + ' (' + qInfo.qtyLabel + ')',
+            pack: c.pack + ' [' + qInfo.sizeName + ']',
+            baggage: c.bag,
+            price: qInfo.millimes + (qInfo.qty > 1 ? (' × ' + qInfo.qty + ' = ' + sub + ' د.ت') : ''),
+            unitCost: qInfo.unitCost,
+            qty: qInfo.qty,
+            subtotal: sub
+          });
+        }
       }
 
-      // 1. Liquids: Olive oil, honey, date syrup, flower water
-      var liquidNames = [];
-      if (q.indexOf('زيت زيتون') !== -1 || (q.indexOf('زيت') !== -1 && q.indexOf('بزايد زيت') === -1)) liquidNames.push('زيت زيتونة');
-      if (q.indexOf('عسل') !== -1) liquidNames.push('عسل حر');
-      if (q.indexOf('رب') !== -1) liquidNames.push('رب تمر');
-      if (q.indexOf('زهر') !== -1 || q.indexOf('عطرشية') !== -1) liquidNames.push('ماء زهر/عطرشية');
-      if (liquidNames.length > 0) {
-        var qLiq = extractQuantityNearKeyword(q, /(زيت|عسل|رب|زهر|عطرشية)/);
-        var subLiq = Math.round(qLiq.qty * qLiq.unitCost * 10) / 10;
-        detected.push({
-          item: '🫒 ' + liquidNames.join(' + ') + ' (' + qLiq.qtyLabel + ')',
-          pack: 'حكة حديد غذائية مختومة بالماكينة (' + qLiq.sizeName + ') + تغليف سوفيد مانع للتسرب',
-          baggage: '✈️ يتحط في البقاج اللوطة في الطيارة',
-          price: qLiq.millimes + (qLiq.qty > 1 ? (' × ' + qLiq.qty + ' = ' + subLiq + ' د.ت') : ''),
-          unitCost: qLiq.unitCost,
-          qty: qLiq.qty,
-          subtotal: subLiq
-        });
-      }
-
-      // 2. Pastes & Canned: Harissa, Mechwiya, Tomato paste, Olives, Tuna, Pickles, Jam
-      var pasteNames = [];
-      if (q.indexOf('هريسة') !== -1) pasteNames.push('هريسة عربي');
-      if (q.indexOf('مشوية') !== -1) pasteNames.push('سلطة مشوية');
-      if (q.indexOf('مالح') !== -1 || q.indexOf('مرقد') !== -1) pasteNames.push('مالح ومخللات');
-      if (q.indexOf('زيتون') !== -1 && q.indexOf('زيت زيتون') === -1) pasteNames.push('زيتون');
-      if (q.indexOf('تن') !== -1 && q.indexOf('تنجم') === -1 && q.indexOf('تستنى') === -1) pasteNames.push('تن تونسي');
-      if (q.indexOf('معجون') !== -1) pasteNames.push('معجون');
-      if (pasteNames.length > 0) {
-        var qPas = extractQuantityNearKeyword(q, /(هريسة|مشوية|مالح|مرقد|تن|معجون)/);
-        var subPas = Math.round(qPas.qty * qPas.unitCost * 10) / 10;
-        detected.push({
-          item: '🌶️ ' + pasteNames.join(' + ') + ' (' + qPas.qtyLabel + ')',
-          pack: 'حكة حديد مختومة بالماكينة (' + qPas.sizeName + ') + ساشي سوفيد عازل للريحة',
-          baggage: '✈️ يتحط في البقاج اللوطة ومضمون 100% ضد الضغط',
-          price: qPas.millimes + (qPas.qty > 1 ? (' × ' + qPas.qty + ' = ' + subPas + ' د.ت') : ''),
-          unitCost: qPas.unitCost,
-          qty: qPas.qty,
-          subtotal: subPas
-        });
-      }
-
-      // 3. Dry & Sous-vide items: Bsissa, Degla, Mloukhiya, Couscous, Spices, Cheese
-      var dryNames = [];
-      if (q.indexOf('بسيسة') !== -1) dryNames.push('بسيسة تونسية');
-      if (q.indexOf('دقلة') !== -1 || q.indexOf('تمر') !== -1) dryNames.push('دقلة النور');
-      if (q.indexOf('ملوخية') !== -1) dryNames.push('ملوخية');
-      if (q.indexOf('كسكسي') !== -1 || q.indexOf('عولة') !== -1) dryNames.push('كسكسي عولة');
-      if (q.indexOf('فحات') !== -1 || q.indexOf('تابل') !== -1 || q.indexOf('كمون') !== -1) dryNames.push('فحات وتابل تونسي');
-      if (q.indexOf('فرماج') !== -1 || q.indexOf('جبن') !== -1) dryNames.push('فرماج');
-      if (dryNames.length > 0) {
-        var qDry = extractQuantityNearKeyword(q, /(بسيسة|دقلة|تمر|ملوخية|كسكسي|عولة|فحات|تابل|كمون|فرماج)/);
-        var subDry = Math.round(qDry.qty * qDry.unitCost * 10) / 10;
-        detected.push({
-          item: '🛡️ ' + dryNames.join(' + ') + ' (' + qDry.qtyLabel + ')',
-          pack: 'حكك مختومة (' + qDry.sizeName + ') أو ساشيات سوفيد خشينة مسحوبة الهواء',
-          baggage: '🎒 يتعدى في بقاج اليد وإلا في البقاج اللوطة',
-          price: qDry.millimes + (qDry.qty > 1 ? (' × ' + qDry.qty + ' = ' + subDry + ' د.ت') : ''),
-          unitCost: qDry.unitCost,
-          qty: qDry.qty,
-          subtotal: subDry
-        });
-      }
-
-      // 4. Tunisian Sweets: Baklawa, Kaak Warka, Makroudh, Ghraiba, Samsa, Hlou Tounsi
-      var sweetNames = [];
-      if (q.indexOf('بقلاوة') !== -1) sweetNames.push('بقلاوة');
-      if (q.indexOf('كعك') !== -1) sweetNames.push('كعك ورقة');
-      if (q.indexOf('مقروض') !== -1) sweetNames.push('مقروض');
-      if (q.indexOf('غريبة') !== -1) sweetNames.push('غريبة');
-      if (q.indexOf('صمصة') !== -1 || q.indexOf('زلابية') !== -1) sweetNames.push('صمصة وزلابية');
-      if (sweetNames.length === 0 && q.indexOf('حلو') !== -1) sweetNames.push('حلو تونسي');
-      if (sweetNames.length > 0) {
-        var qSw = extractQuantityNearKeyword(q, /(بقلاوة|كعك|مقروض|غريبة|صمصة|حلو)/);
-        var subSw = Math.round(qSw.qty * qSw.unitCost * 10) / 10;
-        detected.push({
-          item: '🥮 ' + sweetNames.join(' + ') + ' (' + qSw.qtyLabel + ')',
-          pack: 'حكة مختومة (' + qSw.sizeName + ') أو بواتة يابسة ضد الفعص + سوفيد خفيف',
-          baggage: '🎒 يتعدى في بقاج اليد وإلا في وسط الفاليز',
-          price: qSw.millimes + (qSw.qty > 1 ? (' × ' + qSw.qty + ' = ' + subSw + ' د.ت') : ''),
-          unitCost: qSw.unitCost,
-          qty: qSw.qty,
-          subtotal: subSw
-        });
-      }
-
-      // 5. Cooked / Meats / Legumes / Sauce: Merguez, Gaddid, Meat, Hommos, Loubia, Tomato paste, Cooked dishes
-      var cookedNames = [];
-      if (q.indexOf('مرقاز') !== -1) cookedNames.push('مرقاز');
-      if (q.indexOf('قديد') !== -1) cookedNames.push('قديد');
-      if (q.indexOf('حمص') !== -1) cookedNames.push('حمص (منفخ جديد غير مكنجل)');
-      if (q.indexOf('لوبيا') !== -1) cookedNames.push('لوبيا (منفخة جديدة غير مكنجلة)');
-      if (q.indexOf('لحم') !== -1) cookedNames.push('لحم (جديد غير مكنجل)');
-      if (q.indexOf('طماطم') !== -1) cookedNames.push('حكة طماطم جديدة');
-      if (q.indexOf('حوت') !== -1 || q.indexOf('قرنيط') !== -1) cookedNames.push('حوت وقرنيط');
-      if (q.indexOf('عصبان') !== -1 || q.indexOf('كمونية') !== -1 || q.indexOf('مرقة') !== -1 || q.indexOf('كسرونة') !== -1 || q.indexOf('سخونة') !== -1) cookedNames.push('ماكلة طايبة سخونة في كسرونتها');
-      if (cookedNames.length > 0) {
-        var qCk = extractQuantityNearKeyword(q, /(مرقاز|قديد|حمص|لوبيا|لحم|طماطم|حوت|قرنيط|عصبان|كمونية|مرقة)/);
-        var subCk = Math.round(qCk.qty * qCk.unitCost * 10) / 10;
-        detected.push({
-          item: '🍲 ' + cookedNames.join(' + ') + ' (' + qCk.qtyLabel + ')',
-          pack: 'تعليب في حكك حديد مختومة (' + qCk.sizeName + ' — تجي سخونة ملي تطفي عليها وفي نفس الكسرونة وبزايد زيت شوية)',
-          baggage: '✈️ يتحط في البقاج اللوطة ومضمون 100%',
-          price: qCk.millimes + (qCk.qty > 1 ? (' × ' + qCk.qty + ' = ' + subCk + ' د.ت') : ''),
-          unitCost: qCk.unitCost,
-          qty: qCk.qty,
-          subtotal: subCk
-        });
+      // If no specific food name was mentioned, check if the customer asked for can sizes directly (كيلو / رطل / نص رطل)
+      if (detected.length === 0 && (q.indexOf('أحجام') !== -1 || q.indexOf('احجام') !== -1 || q.indexOf('حكك') !== -1 || q.indexOf('حكة') !== -1 || q.indexOf('رطل') !== -1 || q.indexOf('3500') !== -1)) {
+        if (q.indexOf('كيلو') !== -1 || q.indexOf('أحجام') !== -1 || q.indexOf('احجام') !== -1) {
+          detected.push({
+            item: '🥫 حكة كيلو (1 كغ)',
+            pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
+            baggage: '✈️ مضمونة 100% للسفر في الطيارة',
+            price: '3500 مليم (3.5 د.ت)',
+            unitCost: 3.5,
+            qty: 1,
+            subtotal: 3.5
+          });
+        }
+        if (q.indexOf('رطل') !== -1 || q.indexOf('أحجام') !== -1 || q.indexOf('احجام') !== -1) {
+          detected.push({
+            item: '🥫 حكة رطل (500 غ)',
+            pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
+            baggage: '✈️ مضمونة 100% للسفر في الطيارة',
+            price: '2500 مليم (2.5 د.ت)',
+            unitCost: 2.5,
+            qty: 1,
+            subtotal: 2.5
+          });
+        }
+        if (q.indexOf('نص رطل') !== -1 || q.indexOf('نصف رطل') !== -1 || q.indexOf('2000') !== -1 || q.indexOf('أحجام') !== -1 || q.indexOf('احجام') !== -1) {
+          detected.push({
+            item: '🥫 حكة نص رطل (250 غ)',
+            pack: 'حكة حديد غذائية مختومة بالماكينة (Sertissage)',
+            baggage: '✈️ مضمونة 100% للسفر في الطيارة',
+            price: '2000 مليم (2.0 د.ت)',
+            unitCost: 2.0,
+            qty: 1,
+            subtotal: 2.0
+          });
+        }
       }
 
       return detected;
@@ -3810,8 +3758,53 @@
     var waMessages = [{"id": "QA-01", "customerName": "تساؤل حريف (QA-01): 🏺 الترحيب والتعريف بالمحل", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 21.45}], "duration": "00:21", "text": "عسلامة، شكون معايا وشنوة خدمات محل زينب العزيزي لتعليب المأكولات التونسية؟", "draftReply": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية. أنا الأفاتار الصوتي متاع زينب العزيزي، تنجم تسجل لي ميساج صوتي وإلا تكتب لي بالتونسي بالدارجة أو بالعربية شنية الماكلة اللي عندك: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-02", "customerName": "تساؤل حريف (QA-02): 🫒 المأكولات القابلة للتعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 4.3}, {"clip": "welcome", "start": 13.6, "end": 21.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:13", "text": "شنوة أنواع الماكلة التونسية اللي تنجموا تعلبوها عندكم للسفر والطيارة؟", "draftReply": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية! نعلبوا: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز، والماكلة الطايبة الكل، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-03", "customerName": "تساؤل حريف (QA-03): 🥫 الأحجام والأسعار الكاملة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:09", "text": "قداش سوم التعليب وشنوة أحجام الحكك الموجودة عندكم (كيلو، رطل، نص رطل)؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-04", "customerName": "تساؤل حريف (QA-04): 🥫 سوم حكة الكيلو (1 كغ)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 4.4}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "قداش سوم حكة الكيلو (1 كغ) متاع التعليب في المحل؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500 مليم (3.5 د.ت)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-05", "customerName": "تساؤل حريف (QA-05): 🥫 سوم حكة الرطل ونص الرطل", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 4.75, "end": 9.05}], "duration": "00:05", "text": "قداش تتكلف حكة الرطل (500 غ) وحكة نص الرطل (250 غ)؟", "draftReply": "عندنا حكك رطل بـ 2500 مليم (2.5 د.ت)، وحكك نص رطل بـ 2000 مليم (2.0 د.ت)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-06", "customerName": "تساؤل حريف (QA-06): 🕒 التوقيت الكامل (الصباح والعشية)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 8.86}], "duration": "00:09", "text": "وقتاش يخدم المحل متاعكم؟ من وقتاش لوقتاش تحلوا الصباح والعشية؟", "draftReply": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-07", "customerName": "تساؤل حريف (QA-07): 🌅 توقيت حصة الصباح والقايلة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 6.65}], "duration": "00:07", "text": "وقتاش تحلوا الصباح؟ ولوقتاش تبقوا حالين قبل راحة القايلة؟", "draftReply": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11 (08:00 – 11:00)، ونرتاحوا شوية القايلة.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-08", "customerName": "تساؤل حريف (QA-08): 🌇 توقيت حصة العشية", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 4.85, "end": 8.86}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "وقتاش ترجعوا تحلوا العشية بعد القايلة ولوقتاش تخدموا؟", "draftReply": "نرتاحوا شوية القايلة، ونرجعوا الساعتين (14:00) نخدموا حتاش للخمسة (17:00)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-09", "customerName": "تساؤل حريف (QA-09): 🍲 التوصيات الكاملة لنجاح التعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 31.8}], "duration": "00:32", "text": "شنوة التوصيات والشروط الكل باش تنجح عملية تعليب الماكلة الطايبة وما تفزدش في السفر؟", "draftReply": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، اللحم زادة يكون جديد ماهوش مكنجل، وتكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-10", "customerName": "تساؤل حريف (QA-10): 🍅 شرط المكونات وحكة الطماطم", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 9.1}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "شنوة شروط المكونات وحكة الطماطم اللي نطيب بيها الماكلة قبل ما نجيبها للتعليب؟", "draftReply": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-11", "customerName": "تساؤل حريف (QA-11): 🫘 شرط الحمص واللوبيا واللحم (غير مكنجل)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 9.35, "end": 17.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "هل نجم نطيب بحمص أو لوبيا أو لحم مكنجل من الكونجيلاتور ونعلبهم؟", "draftReply": "حمص وإلا لوبيا لازم يكونوا منفخين جدد ماهمش مكنجلين، واللحم زادة يكون جديد ماهوش مكنجل، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-12", "customerName": "تساؤل حريف (QA-12): 🫒 كمية الزيت وطريقة الطبخ للتعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 17.7, "end": 26.6}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "كيفاش نطيب الماكلة متاعي وقداش نحط فيها زيت باش تصبر وتنجح في التعليب؟", "draftReply": "تكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-13", "customerName": "تساؤل حريف (QA-13): 🍲 جلب الماكلة سخونة وفي نفس الكسرونة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 22.7, "end": 31.8}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "نجيب الماكلة للمحل سخونة وإلا باردة؟ ونفرغها في بواتة وإلا نجيبها في كسرونتها؟", "draftReply": "تجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-14", "customerName": "تساؤل حريف (QA-14): 🌶️ تعليب الزيت والهريسة والحلو والدقلة والبسيسة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "welcome", "start": 15.8, "end": 21.45}, {"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:15", "text": "عندي زيت زيتونة وهريسة عربي وحلو تونسي ودقلة وبسيسة وملوخية ومرقاز، قداش تتكلف الحكك متاعهم؟", "draftReply": "نعلبوا زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز: بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-15", "customerName": "تساؤل حريف (QA-15): 📅 الأسعار والتوقيت معاً", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "prices", "start": 0.0, "end": 8.15}, {"clip": "hours", "start": 0.0, "end": 8.86}, {"clip": "prices", "start": 8.15, "end": 9.05}], "duration": "00:17", "text": "عيشك أعطيني سوم الحكك الكل ووقتاش نجم نجي للمحل الصباح ولا العشية؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000. وبالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}];
     for (var _mIdx = 0; _mIdx < waMessages.length; _mIdx++) {
       var _ck = waMessages[_mIdx].clipKey || 'welcome';
-      waMessages[_mIdx].audioUrl = REAL_ZAINEB_VOICE_CLIPS[_ck];
+      waMessages[_mIdx].audioUrl = null;
       waMessages[_mIdx].replyAudioUrl = REAL_ZAINEB_VOICE_CLIPS[_ck];
+    }
+
+    var activeSegQueue = [];
+    var activeSegEnd = null;
+    function playZainebSegmentSequence(segments, fallbackClipKey) {
+      stopZainebVoice();
+      if (!segments || ! segments.length) {
+        var uri = REAL_ZAINEB_VOICE_CLIPS[fallbackClipKey || 'welcome'] || REAL_ZAINEB_VOICE_CLIPS.welcome;
+        var a0 = new Audio(uri);
+        activeRealVoiceAudio = a0;
+        setAvatarSpeakingState(true, '', '🔊 زينب العزيزي تجاوب بالصوت التونسي...');
+        a0.onended = function() { setAvatarSpeakingState(false); };
+        a0.play().catch(function() { setAvatarSpeakingState(false); });
+        return;
+      }
+      activeSegQueue = segments.slice();
+      setAvatarSpeakingState(true, '', '🔊 زينب العزيزي تجاوب بالصوت التونسي المطابق...');
+
+      function nextSeg() {
+        if (!activeSegQueue || activeSegQueue.length === 0) {
+          setAvatarSpeakingState(false);
+          return;
+        }
+        var seg = activeSegQueue.shift();
+        var clipUri = REAL_ZAINEB_VOICE_CLIPS[seg.clip] || REAL_ZAINEB_VOICE_CLIPS.welcome;
+        var aud = new Audio(clipUri);
+        activeRealVoiceAudio = aud;
+        aud.currentTime = seg.start || 0;
+        activeSegEnd = (typeof seg.end === 'number') ? seg.end : null;
+        aud.ontimeupdate = function() {
+          if (activeSegEnd !== null && aud.currentTime >= activeSegEnd) {
+            aud.ontimeupdate = null;
+            aud.pause();
+            nextSeg();
+          }
+        };
+        aud.onended = function() {
+          aud.ontimeupdate = null;
+          nextSeg();
+        };
+        aud.play().catch(function() {
+          setAvatarSpeakingState(false);
+        });
+      }
+      nextSeg();
     }
 
     function buildWaBotAnalysisAndReply(msgObj) {
@@ -3855,38 +3848,35 @@
         itemsSummaryList.push('📝 النص المفرغ من الأوديو: "' + text + '"');
       }
 
+      var matchedQa = findMatchingQaItemForText(text);
       var replyLines = [];
-      replyLines.push('عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية! 🇹🇳🏺');
 
-      if (isPricesTopic) {
-        replyLines.push('\n🥫 بالنسبة للأحجام والأسعار متاع الحكك عندنا:');
-        replyLines.push('• حكة كيلو (1 كغ): 3500 مليم (3.5 د.ت)');
-        replyLines.push('• حكة رطل (500 غ): 2500 مليم (2.5 د.ت)');
-        replyLines.push('• حكة نص رطل (250 غ): 2000 مليم (2.0 د.ت)');
-      }
-
-      if (isTipsTopic) {
-        replyLines.push('\n🍲 بالنسبة للتوصيات لنجاح عملية التعليب:');
-        replyLines.push('• أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم.');
-        replyLines.push('• حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، واللحم زادة يكون جديد ماهوش مكنجل.');
-        replyLines.push('• تكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي.');
-        replyLines.push('• تجيبيها سخونة (ملي تطفي عليها تجيبيها) وفي نفس الكسرونة اللي طابت فيها من غير ما تحوليها في حاجة أخرى.');
-      }
-
-      if (foodItems.length > 0 && !isPricesTopic && !isTipsTopic) {
-        replyLines.push('\n🔍 تحليل المأكولات المذكورة في الأوديو:');
-        for (var j = 0; j < foodItems.length; j++) {
-          var fi = foodItems[j];
-          replyLines.push('• ' + fi.item + ': ' + fi.pack + ' — السوم: ' + fi.price + '.');
+      if (matchedQa) {
+        msgObj.clipKey = matchedQa.clipKey;
+        msgObj.segments = matchedQa.segments;
+        replyLines.push(matchedQa.avatarAnswer);
+      } else {
+        replyLines.push('عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية! 🇹🇳🏺');
+        if (foodItems.length > 0) {
+          replyLines.push('\n🔍 بخصوص المأكولات اللي ذكرتها في الأوديو:');
+          for (var j = 0; j < foodItems.length; j++) {
+            var fi = foodItems[j];
+            replyLines.push('• ' + fi.item + ': ' + fi.pack + ' (' + fi.baggage + ' — السوم: ' + fi.price + ').');
+          }
+          if (estimatedTotal > 0) {
+            replyLines.push('💰 المجموع التقديري: ' + estimatedTotal.toFixed(1) + ' د.ت (' + Math.round(estimatedTotal * 1000) + ' مليم).');
+          }
+        }
+        if (isPricesTopic && foodItems.length === 0) {
+          replyLines.push('\n🥫 بالنسبة للأحجام والأسعار متاع الحكك عندنا: حكة كيلو بـ 3500، حكة رطل بـ 2500، وحكة نص رطل بـ 2000، ومرحبا بيكم!');
+        }
+        if (isTipsTopic) {
+          replyLines.push('\n🍲 توصيات نجاح التعليب: لازم كل شيء اللي تطيبي بيه يكون جديد خاصة حكة الطماطم، الحمص واللوبيا منفخين جدد ماهمش مكنجلين، اللحم جديد ماهوش مكنجل، الماكلة بزايد زيت شوية، وتجيبيها سخونة ملي تطفي عليها وفي نفس الكسرونة اللي طابت فيها.');
+        }
+        if (isHoursTopic || (foodItems.length === 0 && !isPricesTopic && !isTipsTopic)) {
+          replyLines.push('\n🕒 بالنسبة للتوقيت: نخدموا الصباح من الثمنية للـ 11 (08:00 – 11:00)، ونرتاحوا شوية القايلة، ونرجعوا الساعتين نخدموا حتاش للخمسة (14:00 – 17:00). مرحبا بيكم!');
         }
       }
-
-      if (isHoursTopic) {
-        replyLines.push('\n🕒 بالنسبة للتوقيت: نخدموا الصباح من الثمنية للـ 11 (08:00 – 11:00)، ونرتاحوا شوية القايلة، ونرجعوا الساعتين نخدموا حتاش للخمسة (14:00 – 17:00). مرحبا بيكم!');
-      } else {
-        replyLines.push('\n🕒 توقيت المحل: الصباح من 8 للـ 11، والعشية من الساعتين (14:00) للخمسة (17:00). مرحبا بيكم!');
-      }
-
       // Build an exact, 100% matching Voice Message Audit & Review (مراجعة البوت المطابقة للأوديو)
       var reviewChecks = [];
       reviewChecks.push('🎙️ النص المفرغ من الأوديو حرفياً: «' + text + '»');
@@ -3921,13 +3911,42 @@
       };
     }
 
+    function findMatchingQaItemForText(rawText) {
+      var s = correctTunisianDerjaASR(String(rawText || '')).toLowerCase();
+      if (typeof STANDALONE_ALL_15_QA === 'undefined' || !STANDALONE_ALL_15_QA.length) return null;
+      // 1. Exact or substring match with any of the 15 Customer Questions
+      for (var i = 0; i < STANDALONE_ALL_15_QA.length; i++) {
+        var qa = STANDALONE_ALL_15_QA[i];
+        if (s === qa.customerQuestion.toLowerCase() || s.indexOf(qa.customerQuestion.slice(0, 22).toLowerCase()) !== -1) {
+          return qa;
+        }
+      }
+      // 2. Semantic topic match when no specific food quantities are being calculated
+      var hasSpecificQty = /\b([2-9]|10|زوز|ثلاثة|أربعة|خمسة|ستة)\s*(كيلو|كغ|لتر|رطل|حكك)/.test(s);
+      if (!hasSpecificQty) {
+        if (/كسرونة|سخونة|تبرد|معون/.test(s) && !/أول حاجة/.test(s)) return STANDALONE_ALL_15_QA[12];
+        if (/مكنجل|كونجيلاتور/.test(s) && !/أول حاجة/.test(s)) return STANDALONE_ALL_15_QA[10];
+        if (/طماطم/.test(s) && !/حمص/.test(s)) return STANDALONE_ALL_15_QA[9];
+        if (/بزايد زيت/.test(s) && !/أول حاجة/.test(s)) return STANDALONE_ALL_15_QA[11];
+        if (/توصيات|شروط/.test(s)) return STANDALONE_ALL_15_QA[8];
+        if ((/أحجام|احجام|سوم|قداش|حكك/.test(s)) && (/وقتاش|توقيت|الصباح|العشية/.test(s))) return STANDALONE_ALL_15_QA[14];
+        if (/رطل|2500|2000|نص رطل/.test(s) && !/كيلو|3500/.test(s)) return STANDALONE_ALL_15_QA[4];
+        if (/حكة الكيلو|سوم حكة الكيلو/.test(s) && !/رطل/.test(s)) return STANDALONE_ALL_15_QA[3];
+        if (/أحجام|احجام|سوم التعليب|قداش سوم الحكك/.test(s)) return STANDALONE_ALL_15_QA[2];
+        if (/العشية|الساعتين|للخمسة/.test(s) && !/الصباح|الثمنية/.test(s)) return STANDALONE_ALL_15_QA[7];
+        if (/الصباح|الثمنية|للـ 11/.test(s) && !/العشية|الساعتين/.test(s)) return STANDALONE_ALL_15_QA[6];
+        if (/توقيت|وقتاش|يحل|يسكر|يخدم/.test(s)) return STANDALONE_ALL_15_QA[5];
+        if (/أنواع الماكلة|شنية الماكلة/.test(s)) return STANDALONE_ALL_15_QA[1];
+      }
+      return null;
+    }
+
     function initWhatsAppMessagesAnalysis() {
       for (var i = 0; i < waMessages.length; i++) {
         var res = buildWaBotAnalysisAndReply(waMessages[i]);
         waMessages[i].analysis = res;
         if (!waMessages[i].draftReply) {
           waMessages[i].draftReply = res.suggestedReply;
-          waMessages[i].replyAudioUrl = getPrimaryRealZainebAudioUriForText(waMessages[i].text + ' ' + res.suggestedReply);
         }
         if (!waMessages[i].replyAudioUrl) {
           waMessages[i].replyAudioUrl = getPrimaryRealZainebAudioUriForText(waMessages[i].text + ' ' + waMessages[i].draftReply);
@@ -4000,14 +4019,14 @@
 
     function persistWaInboxState() {
       try {
-        localStorage.setItem('zaineb_wa_inbox_msgs_v6', JSON.stringify(waMessages));
+        localStorage.setItem('zaineb_wa_inbox_msgs_v7', JSON.stringify(waMessages));
         localStorage.setItem('zaineb_wa_inbox_cfg', JSON.stringify(waInboxConfig));
       } catch (e) {}
     }
 
     function loadWaInboxState() {
       try {
-        var savedMsgs = localStorage.getItem('zaineb_wa_inbox_msgs_v6');
+        var savedMsgs = localStorage.getItem('zaineb_wa_inbox_msgs_v7');
         if (savedMsgs !== null) {
           var parsed = JSON.parse(savedMsgs);
           if (Array.isArray(parsed)) {
@@ -4150,6 +4169,18 @@
                 var senderPhone = String(item.senderId || '').replace('@c.us', '');
                 var senderName = item.senderName || ('حريف واتساب +' + senderPhone);
                 receiveNewWhatsAppMessage(senderName, senderPhone, msgContent, isVoiceType, false, item.downloadUrl || null, '00:11');
+                if (isVoiceType && item.downloadUrl && (!item.textMessage && !item.caption)) {
+                  var createdId = waMessages[0] ? waMessages[0].id : null;
+                  var _apiUrl1 = (window.location.origin || '') + '/api/' + 'transcribe-url'; fetch(_apiUrl1, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ audio_url: item.downloadUrl, customer_name: senderName })
+                  }).then(function(r) { return r.json(); }).then(function(trData) {
+                    if (trData && trData.success && trData.transcript && createdId) {
+                      updateWaMessageTranscript(createdId, trData.transcript);
+                    }
+                  }).catch(function() {});
+                }
                 added++;
               }
             }
@@ -4761,6 +4792,10 @@
               : ('مراجعة الرسالة الصوتية: ' + m.text);
             speakExactTextWordForWord(revText);
           } else {
+            if (m.segments && m.segments.length > 0) {
+              playZainebSegmentSequence(m.segments, m.clipKey);
+              return;
+            }
             var textarea = document.getElementById('waDraftInput-' + msgId);
             var replyToRead = (textarea && textarea.value.trim()) ? textarea.value.trim() : m.draftReply;
             speakText(replyToRead, shopConfig.voiceStyle, null, m.clipKey || null);
@@ -4921,7 +4956,8 @@
         } catch (e) {}
       }
 
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // Give webkitSpeechRecognition exclusive access to the microphone when available so it never drops words; only use MediaRecorder fallback if SpeechRecognition is missing
+      if (!SpeechRec && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
           if (!waDirectRecActive) {
             stream.getTracks().forEach(function(t) { t.stop(); });
@@ -5117,9 +5153,26 @@
         renderWhatsAppInbox();
 
         if (exactTranscript) {
-          showToast('✅ تم تفريغ الأوديو المرفوع بدقة 100% وتحليل محتواه حرفياً!', 'success');
+          showToast('✅ تم تفريغ الأوديو المرفوع بدقة 100% وتجهيز إجابة البوت المطابقة لمحتواه!', 'success');
         } else {
-          showToast('🎙️ تم رفع الأوديو (' + durFormatted + ') — يمكنك تثبيت أو تعديل التفريغ النصي مباشرة في البطاقة.', 'success');
+          showToast('🔄 جاري تفريغ الأوديو المرفوع آلياً وتحليل محتواه...', 'success');
+          var reader = new FileReader();
+          reader.onload = function() {
+            var _apiUrl2 = (window.location.origin || '') + '/api/' + 'transcribe'; fetch(_apiUrl2, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                audio_base64: reader.result,
+                filename: file.name,
+                customer_name: cName
+              })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+              if (data && data.success && data.transcript) {
+                updateWaMessageTranscript(newMsgId, data.transcript);
+              }
+            }).catch(function() {});
+          };
+          try { reader.readAsDataURL(file); } catch (err) {}
         }
       }
 

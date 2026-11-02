@@ -1,10 +1,4 @@
-fastapi
-uvicorn
-requests
-pydantic
-python-multipart
-Pillow
-edge-tts
-gTTS
-SpeechRecognition
-google-genai
+gTTS>=2.5.1
+SpeechRecognition>=3.10.0
+gunicorn>=21.2.0
+imageio-ffmpeg>=0.5.1
