@@ -423,7 +423,15 @@ class ConserverieRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path in ("/", "/index.html", "/tunisian_packaging_bot.html"):
+        if parsed.path in ("/customer", "/customer_interface.html"):
+            c_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "customer_interface.html")
+            if os.path.exists(c_file):
+                self._send_cors_headers("text/html; charset=utf-8")
+                with open(c_file, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
+        if parsed.path in ("/", "/index.html", "/dashboard", "/tunisian_packaging_bot.html"):
             html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tunisian_packaging_bot.html")
             if os.path.exists(html_file):
                 self._send_cors_headers("text/html; charset=utf-8")
