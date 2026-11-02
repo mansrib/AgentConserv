@@ -201,6 +201,9 @@
           </svg>
           <span>تواصل عبر واتساب</span>
         </button>
+        <button type="button" onclick="openStandaloneCustomerTab()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+          <span>🙋‍♂️ باج الحريف المستقلة (customer_interface.html ↗)</span>
+        </button>
       </div>
     </div>
 
@@ -1473,18 +1476,7 @@
       selectedVoiceURI: 'auto'
     };
 
-    var appointments = [
-      {
-        id: 'TN-804',
-        name: 'أنيس الطرابلسي',
-        phone: '55412890',
-        date: '2026-11-01',
-        slot: '10:30 ص - 11:30 ص',
-        items: '5 لتر زيت زيتونة، 3 كغ هريسة عربي، 2 كغ بقلاوة وكيلو دقلة',
-        method: 'بيدون حديد مختوم + حكك Sertissage + سوفيد (Sous-vide)',
-        notes: 'طيارة لباريس غدوة العشية'
-      }
-    ];
+    var appointments = [];
 
     var chatHistory = [];
     var isRecording = false;
@@ -1890,7 +1882,7 @@
 
     function loadSavedState() {
       try {
-        var savedCfg = localStorage.getItem('zaineb_packaging_shop_cfg_v5');
+        var savedCfg = localStorage.getItem('zaineb_packaging_shop_cfg_v6');
         if (savedCfg) {
           var parsed = JSON.parse(savedCfg);
           for (var k in parsed) {
@@ -1899,7 +1891,7 @@
             }
           }
         }
-        var savedAppts = localStorage.getItem('zaineb_packaging_appts');
+        var savedAppts = localStorage.getItem('zaineb_packaging_appts_v6');
         if (savedAppts !== null) {
           var parsedAppts = JSON.parse(savedAppts);
           if (Array.isArray(parsedAppts)) {
@@ -1911,8 +1903,8 @@
 
     function persistState() {
       try {
-        localStorage.setItem('zaineb_packaging_shop_cfg_v5', JSON.stringify(shopConfig));
-        localStorage.setItem('zaineb_packaging_appts', JSON.stringify(appointments));
+        localStorage.setItem('zaineb_packaging_shop_cfg_v6', JSON.stringify(shopConfig));
+        localStorage.setItem('zaineb_packaging_appts_v6', JSON.stringify(appointments));
       } catch (e) {}
     }
 
@@ -3703,6 +3695,14 @@
       showUnblockableWaDispatch(phone, messageText, '📲 الرسالة وصلت لباج الكونسيرفيري وجاهزة للإرسال في واتساب');
     }
 
+    function openStandaloneCustomerTab() {
+      if (window.location && window.location.protocol && window.location.protocol.indexOf('http') === 0 && window.location.hostname !== 'localhost') {
+        window.open('/customer', '_blank', 'noopener,noreferrer');
+      } else {
+        showToast('🙋‍♂️ باج الحريف المستقلة جاهزة في ملف customer_interface.html المنفصل (وعلى الرابط /customer في Render)!', 'success');
+      }
+    }
+
     function openWhatsAppDirect() {
       var msg = 'عسلامة أختي زينب العزيزي 👋\nنحب نسألك على تعليب مأكولات تونسية (سوفيد وزيت زيتونة وهريسة) ووقتاش المحل يخدم.';
       openWhatsAppUrl(msg);
@@ -3788,103 +3788,14 @@
 
     var waLiveStreamInterval = null;
 
-    var incomingWhatsAppPresets = [
-      {
-        customerName: 'تسجيل صوتي: الأحجام والأسعار (كيلو / رطل / نص رطل)',
-        phone: '21698123456',
-        isVoice: true,
-        clipKey: 'prices',
-        duration: '00:09',
-        text: 'بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!'
-      },
-      {
-        customerName: 'تسجيل صوتي: توصيات وشروط نجاح عملية التعليب',
-        phone: '21698123456',
-        isVoice: true,
-        clipKey: 'tips',
-        duration: '00:32',
-        text: 'بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، اللحم زادة يكون جديد ماهوش مكنجل، وتكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى.'
-      },
-      {
-        customerName: 'تسجيل صوتي: التوقيت وأوقات العمل (الصباح والعشية)',
-        phone: '21698123456',
-        isVoice: true,
-        clipKey: 'hours',
-        duration: '00:09',
-        text: 'بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة.'
-      },
-      {
-        customerName: 'تسجيل صوتي: ترحيب الأفاتار الصوتي والمأكولات التونسية',
-        phone: '21698123456',
-        isVoice: true,
-        clipKey: 'welcome',
-        duration: '00:21',
-        text: 'عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية. أنا الأفاتار الصوتي متاع زينب العزيزي، تنجم تسجل لي ميساج صوتي وإلا تكتب لي بالتونسي بالدارجة أو بالعربية شنية الماكلة اللي عندك: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز.'
-      }
-    ];
+    var incomingWhatsAppPresets = [{"customerName": "تساؤل حريف (QA-01): 🏺 الترحيب والتعريف بالمحل", "phone": "21698123456", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 21.45}], "duration": "00:21", "text": "عسلامة، شكون معايا وشنوة خدمات محل زينب العزيزي لتعليب المأكولات التونسية؟", "avatarAnswer": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية. أنا الأفاتار الصوتي متاع زينب العزيزي، تنجم تسجل لي ميساج صوتي وإلا تكتب لي بالتونسي بالدارجة أو بالعربية شنية الماكلة اللي عندك: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز."}, {"customerName": "تساؤل حريف (QA-02): 🫒 المأكولات القابلة للتعليب", "phone": "21698123456", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 4.3}, {"clip": "welcome", "start": 13.6, "end": 21.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:13", "text": "شنوة أنواع الماكلة التونسية اللي تنجموا تعلبوها عندكم للسفر والطيارة؟", "avatarAnswer": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية! نعلبوا: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز، والماكلة الطايبة الكل، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-03): 🥫 الأحجام والأسعار الكاملة", "phone": "21698123456", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:09", "text": "قداش سوم التعليب وشنوة أحجام الحكك الموجودة عندكم (كيلو، رطل، نص رطل)؟", "avatarAnswer": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-04): 🥫 سوم حكة الكيلو (1 كغ)", "phone": "21698123456", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 4.4}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "قداش سوم حكة الكيلو (1 كغ) متاع التعليب في المحل؟", "avatarAnswer": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500 مليم (3.5 د.ت)، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-05): 🥫 سوم حكة الرطل ونص الرطل", "phone": "21698123456", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 4.75, "end": 9.05}], "duration": "00:05", "text": "قداش تتكلف حكة الرطل (500 غ) وحكة نص الرطل (250 غ)؟", "avatarAnswer": "عندنا حكك رطل بـ 2500 مليم (2.5 د.ت)، وحكك نص رطل بـ 2000 مليم (2.0 د.ت)، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-06): 🕒 التوقيت الكامل (الصباح والعشية)", "phone": "21698123456", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 8.86}], "duration": "00:09", "text": "وقتاش يخدم المحل متاعكم؟ من وقتاش لوقتاش تحلوا الصباح والعشية؟", "avatarAnswer": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة."}, {"customerName": "تساؤل حريف (QA-07): 🌅 توقيت حصة الصباح والقايلة", "phone": "21698123456", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 6.65}], "duration": "00:07", "text": "وقتاش تحلوا الصباح؟ ولوقتاش تبقوا حالين قبل راحة القايلة؟", "avatarAnswer": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11 (08:00 – 11:00)، ونرتاحوا شوية القايلة."}, {"customerName": "تساؤل حريف (QA-08): 🌇 توقيت حصة العشية", "phone": "21698123456", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 4.85, "end": 8.86}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "وقتاش ترجعوا تحلوا العشية بعد القايلة ولوقتاش تخدموا؟", "avatarAnswer": "نرتاحوا شوية القايلة، ونرجعوا الساعتين (14:00) نخدموا حتاش للخمسة (17:00)، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-09): 🍲 التوصيات الكاملة لنجاح التعليب", "phone": "21698123456", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 31.8}], "duration": "00:32", "text": "شنوة التوصيات والشروط الكل باش تنجح عملية تعليب الماكلة الطايبة وما تفزدش في السفر؟", "avatarAnswer": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، اللحم زادة يكون جديد ماهوش مكنجل، وتكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى."}, {"customerName": "تساؤل حريف (QA-10): 🍅 شرط المكونات وحكة الطماطم", "phone": "21698123456", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 9.1}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "شنوة شروط المكونات وحكة الطماطم اللي نطيب بيها الماكلة قبل ما نجيبها للتعليب؟", "avatarAnswer": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-11): 🫘 شرط الحمص واللوبيا واللحم (غير مكنجل)", "phone": "21698123456", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 9.35, "end": 17.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "هل نجم نطيب بحمص أو لوبيا أو لحم مكنجل من الكونجيلاتور ونعلبهم؟", "avatarAnswer": "حمص وإلا لوبيا لازم يكونوا منفخين جدد ماهمش مكنجلين، واللحم زادة يكون جديد ماهوش مكنجل، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-12): 🫒 كمية الزيت وطريقة الطبخ للتعليب", "phone": "21698123456", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 17.7, "end": 26.6}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "كيفاش نطيب الماكلة متاعي وقداش نحط فيها زيت باش تصبر وتنجح في التعليب؟", "avatarAnswer": "تكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-13): 🍲 جلب الماكلة سخونة وفي نفس الكسرونة", "phone": "21698123456", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 22.7, "end": 31.8}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "نجيب الماكلة للمحل سخونة وإلا باردة؟ ونفرغها في بواتة وإلا نجيبها في كسرونتها؟", "avatarAnswer": "تجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-14): 🌶️ تعليب الزيت والهريسة والحلو والدقلة والبسيسة", "phone": "21698123456", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "welcome", "start": 15.8, "end": 21.45}, {"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:15", "text": "عندي زيت زيتونة وهريسة عربي وحلو تونسي ودقلة وبسيسة وملوخية ومرقاز، قداش تتكلف الحكك متاعهم؟", "avatarAnswer": "نعلبوا زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز: بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!"}, {"customerName": "تساؤل حريف (QA-15): 📅 الأسعار والتوقيت معاً", "phone": "21698123456", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "prices", "start": 0.0, "end": 8.15}, {"clip": "hours", "start": 0.0, "end": 8.86}, {"clip": "prices", "start": 8.15, "end": 9.05}], "duration": "00:17", "text": "عيشك أعطيني سوم الحكك الكل ووقتاش نجم نجي للمحل الصباح ولا العشية؟", "avatarAnswer": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000. وبالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة، ومرحبا بيكم!"}];
 
-    var waMessages = [
-      {
-        id: 'WA-901',
-        customerName: 'تسجيل صوتي 1: الأحجام والأسعار (كيلو 3500 / رطل 2500 / نص رطل 2000)',
-        phone: '21698123456',
-        time: '18:01',
-        isVoice: true,
-        audioUrl: REAL_ZAINEB_VOICE_CLIPS.prices,
-        replyAudioUrl: REAL_ZAINEB_VOICE_CLIPS.prices,
-        duration: '00:09',
-        text: 'بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!',
-        status: 'pending',
-        analysis: null,
-        draftReply: '',
-        sentAt: null
-      },
-      {
-        id: 'WA-902',
-        customerName: 'تسجيل صوتي 2: توصيات وشروط نجاح التعليب للماكلة الطايبة',
-        phone: '21698123456',
-        time: '18:02',
-        isVoice: true,
-        audioUrl: REAL_ZAINEB_VOICE_CLIPS.tips,
-        replyAudioUrl: REAL_ZAINEB_VOICE_CLIPS.tips,
-        duration: '00:32',
-        text: 'بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، اللحم زادة يكون جديد ماهوش مكنجل، وتكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى.',
-        status: 'pending',
-        analysis: null,
-        draftReply: '',
-        sentAt: null
-      },
-      {
-        id: 'WA-903',
-        customerName: 'تسجيل صوتي 3: التوقيت وأوقات العمل (الصباح 8–11 والعشية 14–17)',
-        phone: '21698123456',
-        time: '18:03',
-        isVoice: true,
-        audioUrl: REAL_ZAINEB_VOICE_CLIPS.hours,
-        replyAudioUrl: REAL_ZAINEB_VOICE_CLIPS.hours,
-        duration: '00:09',
-        text: 'بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة.',
-        status: 'pending',
-        analysis: null,
-        draftReply: '',
-        sentAt: null
-      },
-      {
-        id: 'WA-904',
-        customerName: 'تسجيل صوتي 4: الترحيب والمأكولات القابلة للتعليب',
-        phone: '21698123456',
-        time: '18:04',
-        isVoice: true,
-        audioUrl: REAL_ZAINEB_VOICE_CLIPS.welcome,
-        replyAudioUrl: REAL_ZAINEB_VOICE_CLIPS.welcome,
-        duration: '00:21',
-        text: 'عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية. أنا الأفاتار الصوتي متاع زينب العزيزي، تنجم تسجل لي ميساج صوتي وإلا تكتب لي بالتونسي بالدارجة أو بالعربية شنية الماكلة اللي عندك: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز.',
-        status: 'pending',
-        analysis: null,
-        draftReply: '',
-        sentAt: null
-      }
-    ];
+    var waMessages = [{"id": "QA-01", "customerName": "تساؤل حريف (QA-01): 🏺 الترحيب والتعريف بالمحل", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 21.45}], "duration": "00:21", "text": "عسلامة، شكون معايا وشنوة خدمات محل زينب العزيزي لتعليب المأكولات التونسية؟", "draftReply": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية. أنا الأفاتار الصوتي متاع زينب العزيزي، تنجم تسجل لي ميساج صوتي وإلا تكتب لي بالتونسي بالدارجة أو بالعربية شنية الماكلة اللي عندك: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-02", "customerName": "تساؤل حريف (QA-02): 🫒 المأكولات القابلة للتعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "welcome", "segments": [{"clip": "welcome", "start": 0.0, "end": 4.3}, {"clip": "welcome", "start": 13.6, "end": 21.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:13", "text": "شنوة أنواع الماكلة التونسية اللي تنجموا تعلبوها عندكم للسفر والطيارة؟", "draftReply": "عسلامة ومرحبا بيكم في محل زينب العزيزي لتعليب المأكولات التونسية! نعلبوا: زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز، والماكلة الطايبة الكل، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-03", "customerName": "تساؤل حريف (QA-03): 🥫 الأحجام والأسعار الكاملة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:09", "text": "قداش سوم التعليب وشنوة أحجام الحكك الموجودة عندكم (كيلو، رطل، نص رطل)؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-04", "customerName": "تساؤل حريف (QA-04): 🥫 سوم حكة الكيلو (1 كغ)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 0.0, "end": 4.4}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "قداش سوم حكة الكيلو (1 كغ) متاع التعليب في المحل؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500 مليم (3.5 د.ت)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-05", "customerName": "تساؤل حريف (QA-05): 🥫 سوم حكة الرطل ونص الرطل", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "prices", "start": 4.75, "end": 9.05}], "duration": "00:05", "text": "قداش تتكلف حكة الرطل (500 غ) وحكة نص الرطل (250 غ)؟", "draftReply": "عندنا حكك رطل بـ 2500 مليم (2.5 د.ت)، وحكك نص رطل بـ 2000 مليم (2.0 د.ت)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-06", "customerName": "تساؤل حريف (QA-06): 🕒 التوقيت الكامل (الصباح والعشية)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 8.86}], "duration": "00:09", "text": "وقتاش يخدم المحل متاعكم؟ من وقتاش لوقتاش تحلوا الصباح والعشية؟", "draftReply": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-07", "customerName": "تساؤل حريف (QA-07): 🌅 توقيت حصة الصباح والقايلة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 0.0, "end": 6.65}], "duration": "00:07", "text": "وقتاش تحلوا الصباح؟ ولوقتاش تبقوا حالين قبل راحة القايلة؟", "draftReply": "بالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11 (08:00 – 11:00)، ونرتاحوا شوية القايلة.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-08", "customerName": "تساؤل حريف (QA-08): 🌇 توقيت حصة العشية", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "hours", "start": 4.85, "end": 8.86}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:06", "text": "وقتاش ترجعوا تحلوا العشية بعد القايلة ولوقتاش تخدموا؟", "draftReply": "نرتاحوا شوية القايلة، ونرجعوا الساعتين (14:00) نخدموا حتاش للخمسة (17:00)، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-09", "customerName": "تساؤل حريف (QA-09): 🍲 التوصيات الكاملة لنجاح التعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 31.8}], "duration": "00:32", "text": "شنوة التوصيات والشروط الكل باش تنجح عملية تعليب الماكلة الطايبة وما تفزدش في السفر؟", "draftReply": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، حمص وإلا لوبيا يكونوا منفخين جدد ماهمش مكنجلين، اللحم زادة يكون جديد ماهوش مكنجل، وتكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى.", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-10", "customerName": "تساؤل حريف (QA-10): 🍅 شرط المكونات وحكة الطماطم", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 0.0, "end": 9.1}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "شنوة شروط المكونات وحكة الطماطم اللي نطيب بيها الماكلة قبل ما نجيبها للتعليب؟", "draftReply": "بالنسبة للتوصيات لنجاح عملية التعليب: أول حاجة لازم كل شيء اللي باش تطيبي بيه يكون جديد، خاصة حكة الطماطم، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-11", "customerName": "تساؤل حريف (QA-11): 🫘 شرط الحمص واللوبيا واللحم (غير مكنجل)", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 9.35, "end": 17.45}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "هل نجم نطيب بحمص أو لوبيا أو لحم مكنجل من الكونجيلاتور ونعلبهم؟", "draftReply": "حمص وإلا لوبيا لازم يكونوا منفخين جدد ماهمش مكنجلين، واللحم زادة يكون جديد ماهوش مكنجل، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-12", "customerName": "تساؤل حريف (QA-12): 🫒 كمية الزيت وطريقة الطبخ للتعليب", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 17.7, "end": 26.6}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:09", "text": "كيفاش نطيب الماكلة متاعي وقداش نحط فيها زيت باش تصبر وتنجح في التعليب؟", "draftReply": "تكون الماكلة بزايد زيت شوية على العادة، وتطيبي ماكلتك عادي، وتجيبيها سخونة يعني ملي تطفي عليها تجيبيها، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-13", "customerName": "تساؤل حريف (QA-13): 🍲 جلب الماكلة سخونة وفي نفس الكسرونة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "tips", "segments": [{"clip": "tips", "start": 22.7, "end": 31.8}, {"clip": "prices", "start": 8.1, "end": 9.05}], "duration": "00:10", "text": "نجيب الماكلة للمحل سخونة وإلا باردة؟ ونفرغها في بواتة وإلا نجيبها في كسرونتها؟", "draftReply": "تجيبيها سخونة يعني ملي تطفي عليها تجيبيها، وفي نفس الكسرونة اللي طابت فيها تجيبيها فيها من غير ما تحوليها في حاجة أخرى، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-14", "customerName": "تساؤل حريف (QA-14): 🌶️ تعليب الزيت والهريسة والحلو والدقلة والبسيسة", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "prices", "segments": [{"clip": "welcome", "start": 15.8, "end": 21.45}, {"clip": "prices", "start": 0.0, "end": 9.05}], "duration": "00:15", "text": "عندي زيت زيتونة وهريسة عربي وحلو تونسي ودقلة وبسيسة وملوخية ومرقاز، قداش تتكلف الحكك متاعهم؟", "draftReply": "نعلبوا زيت زيتونة، هريسة عربي، حلو تونسي، دقلة، بسيسة، ملوخية، مرقاز: بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}, {"id": "QA-15", "customerName": "تساؤل حريف (QA-15): 📅 الأسعار والتوقيت معاً", "phone": "21698123456", "time": "اليوم", "isVoice": true, "clipKey": "hours", "segments": [{"clip": "prices", "start": 0.0, "end": 8.15}, {"clip": "hours", "start": 0.0, "end": 8.86}, {"clip": "prices", "start": 8.15, "end": 9.05}], "duration": "00:17", "text": "عيشك أعطيني سوم الحكك الكل ووقتاش نجم نجي للمحل الصباح ولا العشية؟", "draftReply": "بالنسبة للأحجام، عندنا حكك كيلو بـ 3500، حكك رطل بـ 2500، وحكك نص رطل بـ 2000. وبالنسبة للتوقيت نخدموا الصباح من الثمنية للـ 11، ونرتاحوا شوية القايلة، نرجعوا الساعتين نخدموا حتاش للخمسة، ومرحبا بيكم!", "status": "approved_sent", "sentAt": "مفعل بالصوت"}];
+    for (var _mIdx = 0; _mIdx < waMessages.length; _mIdx++) {
+      var _ck = waMessages[_mIdx].clipKey || 'welcome';
+      waMessages[_mIdx].audioUrl = REAL_ZAINEB_VOICE_CLIPS[_ck];
+      waMessages[_mIdx].replyAudioUrl = REAL_ZAINEB_VOICE_CLIPS[_ck];
+    }
 
     function buildWaBotAnalysisAndReply(msgObj) {
       var text = String(msgObj.text || '').trim();
@@ -4072,14 +3983,14 @@
 
     function persistWaInboxState() {
       try {
-        localStorage.setItem('zaineb_wa_inbox_msgs_v5', JSON.stringify(waMessages));
+        localStorage.setItem('zaineb_wa_inbox_msgs_v6', JSON.stringify(waMessages));
         localStorage.setItem('zaineb_wa_inbox_cfg', JSON.stringify(waInboxConfig));
       } catch (e) {}
     }
 
     function loadWaInboxState() {
       try {
-        var savedMsgs = localStorage.getItem('zaineb_wa_inbox_msgs_v5');
+        var savedMsgs = localStorage.getItem('zaineb_wa_inbox_msgs_v6');
         if (savedMsgs !== null) {
           var parsed = JSON.parse(savedMsgs);
           if (Array.isArray(parsed)) {
@@ -4835,7 +4746,7 @@
           } else {
             var textarea = document.getElementById('waDraftInput-' + msgId);
             var replyToRead = (textarea && textarea.value.trim()) ? textarea.value.trim() : m.draftReply;
-            speakText(replyToRead, shopConfig.voiceStyle);
+            speakText(replyToRead, shopConfig.voiceStyle, null, m.clipKey || null);
           }
           return;
         }
