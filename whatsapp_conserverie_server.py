@@ -421,35 +421,33 @@ class ConserverieRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._send_cors_headers()
 
+    def _find_html_file(self, candidates):
+        base_dirs = [
+            os.path.dirname(os.path.abspath(__file__)),
+            os.getcwd(),
+        ]
+        for d in base_dirs:
+            for name in candidates:
+                p = os.path.join(d, name)
+                if os.path.exists(p) and os.path.isfile(p):
+                    return p
+        return None
+
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path in ("/customer", "/customer_interface.html"):
-            c_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "customer_interface.html")
-            if os.path.exists(c_file):
-                self._send_cors_headers("text/html; charset=utf-8")
-                with open(c_file, "rb") as f:
-                    self.wfile.write(f.read())
-                return
+        clean_path = parsed.path.rstrip("/") or "/"
 
-        if parsed.path in ("/", "/index.html", "/dashboard", "/tunisian_packaging_bot.html"):
-            html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tunisian_packaging_bot.html")
-            if os.path.exists(html_file):
-                self._send_cors_headers("text/html; charset=utf-8")
-                with open(html_file, "rb") as f:
-                    self.wfile.write(f.read())
-                return
-
-        if parsed.path == "/healthz":
+        if clean_path == "/healthz":
             self._send_cors_headers("application/json; charset=utf-8")
             self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
             return
 
-        if parsed.path == "/api/database":
+        if clean_path == "/api/database":
             self._send_cors_headers()
             self.wfile.write(json.dumps(load_database(), ensure_ascii=False).encode("utf-8"))
             return
 
-        if parsed.path == "/api/tts":
+        if clean_path == "/api/tts":
             qs = parse_qs(parsed.query)
             text = qs.get("text", ["عسلامة ومرحبا بيك في محل زينب العزيزي"])[0]
             mp3_file = synthesize_arabic_voice_reply_mp3(text)
@@ -460,8 +458,25 @@ class ConserverieRequestHandler(BaseHTTPRequestHandler):
                 os.remove(mp3_file)
                 return
 
-        self._send_cors_headers()
-        self.wfile.write(json.dumps({"status": "ok", "service": "Zaineb Conserverie Python Server"}, ensure_ascii=False).encode("utf-8"))
+        # Serve standalone Customer Interface Page on /customer or /customer_interface.html
+        if clean_path in ("/customer", "/customer_interface.html", "/client"):
+            c_file = self._find_html_file(["customer_interface.html", "tunisian_packaging_bot.html"])
+            if c_file:
+                self._send_cors_headers("text/html; charset=utf-8")
+                with open(c_file, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
+        # Serve main Dashboard or Customer HTML on / and any other browser route (NEVER return raw JSON on page load!)
+        html_file = self._find_html_file(["tunisian_packaging_bot.html", "customer_interface.html", "index.html"])
+        if html_file:
+            self._send_cors_headers("text/html; charset=utf-8")
+            with open(html_file, "rb") as f:
+                self.wfile.write(f.read())
+            return
+
+        self._send_cors_headers("text/html; charset=utf-8")
+        self.wfile.write("<h1>يرجى وضع ملف customer_interface.html و tunisian_packaging_bot.html في نفس المجلد مع whatsapp_conserverie_server.py</h1>".encode("utf-8"))
 
     def do_POST(self):
         parsed = urlparse(self.path)
