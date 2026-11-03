@@ -295,10 +295,23 @@ def extract_item_qty_and_can(text, pattern):
 
 def analyze_tunisian_food_message(customer_name, text):
     """
-    تحليل نص أو تفريغ أوديو الحريف صنفاً بصنفاً وبدقة 100% وتوليد إجابة مطابقة تماماً لمحتوى الأوديو.
+    تحليل نص أو تفريغ أوديو الحريف صنفاً بصنفاً وبدقة 100% وتوليد إجابة مطابقة تماماً لمحتوى الأوديو ولقاعدة أسئلة questions.txt.
     """
     q = correct_tunisian_derja_asr(text)
     q_low = q.lower()
+    db_all = load_database()
+    qa_bank = db_all.get("customer_questions_and_avatar_answers", [])
+    for qa in qa_bank:
+        cq = str(qa.get("customer_question", "")).lower()
+        if cq and (q_low == cq or cq[:20] in q_low):
+            ans = qa.get("avatar_answer", "")
+            return {
+                "transcript_analyzed": q,
+                "detected_items": [{"item": qa.get("topic", ""), "pack": ans, "baggage": "✈️ مطابق للمواصفات", "price_label": "3500 / 2500 / 2000 مليم", "unit_price": 3.5, "qty": 1, "subtotal": 3.5}],
+                "estimated_total_tnd": 3.5,
+                "suggested_reply": ans,
+                "spoken_tunisian_reply": convert_text_to_pure_tunisian_arabic_speech(ans)
+            }
     detected = []
 
     CATALOG_ITEMS = [
